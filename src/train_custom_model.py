@@ -6,7 +6,7 @@ After every epoch the full training state is saved to last.pt. If training is in
 same command again with --resume to continue from the last finished epoch.
 
 Usage:
-    python -m src.train_custom_model [--max-epochs N] [--max-train-utterances N] [--resume]
+    python -m src.train_custom_model [--max-epochs N] [--max-train-utterances N] [--resume] [--max-hours H]
 """
 
 from __future__ import annotations
@@ -95,7 +95,11 @@ def load_training_state(path, settings: dict, model, optim, sched, scaler, devic
     return state["epoch"] + 1, state["best"], state["patience"], state["history"]
 
 
-def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = None, resume: bool = False) -> None:
+def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = None, resume: bool = False,
+          max_hours: float | None = None) -> None:
+    """`max_hours`: stop cleanly before this much time has passed (e.g. a Kaggle session limit), after the
+    last epoch that still fits; the run is then continued with `resume=True`."""
+    session_start = time.time()
     mcfg = cfg["models"]["custom_cnn_bilstm_ctc"]
     tcfg = mcfg["training"]
     seed = cfg["project"]["seed"]
@@ -146,10 +150,18 @@ def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = 
     elif last_path.exists():
         log.warning("%s will be overwritten by this new run (use --resume to continue the old run)", last_path)
 
+    stopped_by_time = False
     for epoch in range(start_epoch, epochs + 1):
         if patience >= tcfg["early_stopping_patience"]:
             log.info("Early stopping after %d epochs without improvement", patience)
             break
+        if max_hours and epoch > start_epoch:
+            # Stop when one more epoch (as long as the average so far) would not fit in the time budget.
+            spent = time.time() - session_start
+            if spent + spent / (epoch - start_epoch) > max_hours * 3600:
+                log.info("Time budget of %.1f h reached after epoch %d; continue with --resume", max_hours, epoch - 1)
+                stopped_by_time = True
+                break
         # The shuffle order depends only on the epoch number, so a resumed run sees the same data order.
         train_loader = DataLoader(train_set, batch_size=tcfg["batch_size"], shuffle=True, collate_fn=collate,
                                   num_workers=tcfg["num_workers"],
@@ -194,8 +206,9 @@ def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = 
             patience += 1
         save_training_state(last_path, settings, epoch, best, patience, history, model, optim, sched, scaler)
 
-    save_json({"best_val_" + metric: best, "epochs_run": len(history), "n_train": len(train_df),
-               "n_val": len(val_df), "n_params": n_params, "config": mcfg, "environment": environment_info()},
+    save_json({"best_val_" + metric: best, "epochs_run": len(history), "finished": not stopped_by_time,
+               "n_train": len(train_df), "n_val": len(val_df), "n_params": n_params, "config": mcfg,
+               "environment": environment_info()},
               out_dir / "training_summary.json")
 
 
@@ -205,8 +218,10 @@ def main() -> None:
     parser.add_argument("--max-epochs", type=int, default=None)
     parser.add_argument("--max-train-utterances", type=int, default=None)
     parser.add_argument("--resume", action="store_true", help="Continue the interrupted run saved in last.pt")
+    parser.add_argument("--max-hours", type=float, default=None,
+                        help="Stop cleanly before this many hours (e.g. 11 on Kaggle); continue later with --resume")
     args = parser.parse_args()
-    train(load_config(args.config), args.max_epochs, args.max_train_utterances, args.resume)
+    train(load_config(args.config), args.max_epochs, args.max_train_utterances, args.resume, args.max_hours)
 
 
 if __name__ == "__main__":

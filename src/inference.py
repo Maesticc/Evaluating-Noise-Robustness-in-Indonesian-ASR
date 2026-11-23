@@ -10,6 +10,7 @@ are already done are skipped. The finished file is `predictions_<tag>_<model>.cs
 
 Usage:
     python -m src.inference --models whisper wav2vec2 custom_cnn_bilstm_ctc [--pilot] [--split test] [--resume]
+                            [--max-hours H]
 """
 
 from __future__ import annotations
@@ -44,7 +45,10 @@ def remaining_rows(rows: pd.DataFrame, done: pd.DataFrame) -> pd.DataFrame:
     return rows[todo].reset_index(drop=True)
 
 
-def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: str, resume: bool = False) -> None:
+def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: str, resume: bool = False,
+              deadline: float | None = None) -> bool:
+    """Run one model on every row. Returns False when it stopped at `deadline` (a time.time() value)
+    before all rows were done; the partial file is kept and the run is continued with resume=True."""
     log = get_logger("inference", project_path(cfg["paths"]["logs_dir"]) / f"inference_{tag}.log")
     out_dir = ensure_dir(project_path(cfg["paths"]["predictions_dir"]))
     sr = cfg["audio"]["target_sample_rate"]
@@ -90,6 +94,11 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
 
     errors = []
     for bi, b in enumerate(batches):
+        if deadline and time.time() > deadline:
+            log.info("Time budget reached: %s stopped after %d of %d batches; continue with --resume",
+                     name, bi, len(batches))
+            del model
+            return False
         waves = [generate_waveform(cfg, r) for _, r in b.iterrows()]
         failed = False
         try:
@@ -142,6 +151,7 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
     del model
     if device == "cuda":
         torch.cuda.empty_cache()
+    return True
 
 
 def main() -> None:
@@ -151,8 +161,11 @@ def main() -> None:
     parser.add_argument("--split", default="test")
     parser.add_argument("--pilot", action="store_true")
     parser.add_argument("--resume", action="store_true", help="Continue an unfinished run (skips rows already done)")
+    parser.add_argument("--max-hours", type=float, default=None,
+                        help="Stop cleanly after this many hours (e.g. 11 on Kaggle); continue later with --resume")
     parser.add_argument("--limit", type=int, default=None, help="Debug only: first N utterances")
     args = parser.parse_args()
+    deadline = time.time() + args.max_hours * 3600 if args.max_hours else None
 
     cfg = load_config(args.config)
     set_seed(cfg["project"]["seed"])
@@ -166,7 +179,9 @@ def main() -> None:
         conditions = conditions[conditions["utt_id"].isin(keep)]
         tag += f"_limit{args.limit}"
     for name in args.models:
-        run_model(cfg, name, conditions, tag, device, resume=args.resume)
+        if not run_model(cfg, name, conditions, tag, device, resume=args.resume, deadline=deadline):
+            print(f"Stopped at the time budget during {name}. Run the same command with --resume to continue.")
+            break
 
 
 if __name__ == "__main__":
