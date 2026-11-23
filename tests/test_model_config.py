@@ -24,3 +24,5 @@ def test_environment_info_records_every_package_version():
     info = environment_info()
     for pkg in ("numpy", "pandas", "torch", "transformers", "jiwer", "librosa", "soundfile"):
         assert info[pkg] not in (None, "unknown"), pkg
+    # the tests run inside the Git checkout, so the code version is recorded
+    assert len(info["git_commit"]) == 40 and isinstance(info["git_code_changed"], bool)

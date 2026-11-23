@@ -4,24 +4,30 @@ Noisy waveforms are regenerated deterministically from the conditions manifest, 
 models receive identical inputs. Timing covers model inference only (waveform generation
 excluded) and skips warm-up batches.
 
+Predictions are appended to `predictions_<tag>_<model>.partial.csv` after every batch. If a run
+stops (for example when a Kaggle session ends), run the same command with --resume: rows that
+are already done are skipped. The finished file is `predictions_<tag>_<model>.csv`.
+
 Usage:
-    python -m src.inference --models whisper wav2vec2 custom_cnn_bilstm_ctc [--pilot] [--split test]
+    python -m src.inference --models whisper wav2vec2 custom_cnn_bilstm_ctc [--pilot] [--split test] [--resume]
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import time
 import traceback
 
-import numpy as np
 import pandas as pd
 import torch
 
 from src.model_loader import MODEL_NAMES, load_model
 from src.noise_mixing import generate_waveform
-from src.utils import (ensure_dir, environment_info, get_logger, load_config, manifest_path,
+from src.utils import (ensure_dir, environment_info, get_logger, load_config, load_json, manifest_path,
                        project_path, resolve_device, save_json, set_seed)
+
+ROW_KEY = ["utt_id", "condition", "realization"]
 
 
 def _sync(device: str) -> None:
@@ -29,11 +35,23 @@ def _sync(device: str) -> None:
         torch.cuda.synchronize()
 
 
-def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: str) -> None:
+def remaining_rows(rows: pd.DataFrame, done: pd.DataFrame) -> pd.DataFrame:
+    """Rows of the conditions manifest that have no prediction in `done` yet (order kept)."""
+    if done.empty:
+        return rows
+    done_keys = set(done[ROW_KEY].astype(str).itertuples(index=False, name=None))
+    todo = [k not in done_keys for k in rows[ROW_KEY].astype(str).itertuples(index=False, name=None)]
+    return rows[todo].reset_index(drop=True)
+
+
+def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: str, resume: bool = False) -> None:
     log = get_logger("inference", project_path(cfg["paths"]["logs_dir"]) / f"inference_{tag}.log")
     out_dir = ensure_dir(project_path(cfg["paths"]["predictions_dir"]))
     sr = cfg["audio"]["target_sample_rate"]
     batch_size = cfg["models"][name]["batch_size"]
+    pred_path = out_dir / f"predictions_{tag}_{name}.csv"
+    partial_path = out_dir / f"predictions_{tag}_{name}.partial.csv"
+    setup_path = out_dir / f"predictions_{tag}_{name}.partial.json"
 
     t_load = time.time()
     model = load_model(name, cfg, device)
@@ -44,16 +62,36 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
     if device == "cuda":
         torch.cuda.reset_peak_memory_stats()
 
+    # A run may only be continued on the same model, GPU and batch size, so its timing stays comparable.
+    env = environment_info()
+    setup = json.loads(json.dumps({"model": model.describe(), "device": device, "gpu": env.get("gpu"),
+                                   "batch_size": batch_size, "n_rows": len(conditions)}, default=str))
+    done = pd.DataFrame(columns=ROW_KEY)
+    if partial_path.exists() and resume:
+        saved = load_json(setup_path)
+        if saved != setup:
+            raise ValueError(f"Cannot resume {partial_path}: it was started with another model, GPU, batch size "
+                             f"or number of rows.\nthen: {saved}\nnow:  {setup}")
+        done = pd.read_csv(partial_path, keep_default_na=False)
+        log.info("Resuming %s: %d of %d rows already done", name, len(done), len(conditions))
+    else:
+        if partial_path.exists():
+            log.warning("Removing unfinished %s (use --resume to continue it instead)", partial_path)
+            partial_path.unlink()
+        save_json(setup, setup_path)
+
     # Sort by duration inside each condition to reduce padding; order does not affect results.
     rows = conditions.sort_values(["condition", "duration_sec", "utt_id"]).reset_index(drop=True)
+    rows = remaining_rows(rows, done)
     batches = [rows.iloc[i:i + batch_size] for i in range(0, len(rows), batch_size)]
 
     for b in batches[: cfg["inference"]["warmup_batches"]]:
         model.transcribe([generate_waveform(cfg, r) for _, r in b.iterrows()])
 
-    records, errors = [], []
+    errors = []
     for bi, b in enumerate(batches):
         waves = [generate_waveform(cfg, r) for _, r in b.iterrows()]
+        failed = False
         try:
             _sync(device)
             t0 = time.perf_counter()
@@ -64,8 +102,9 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
             errors.append({"batch": bi, "utt_ids": list(b["utt_id"]), "error": repr(exc),
                            "traceback": traceback.format_exc()})
             log.error("Batch %d failed: %r", bi, exc)
-            hyps, elapsed = [None] * len(b), float("nan")
+            hyps, elapsed, failed = [None] * len(b), float("nan"), True
         audio_sec = sum(len(w) for w in waves) / sr
+        records = []
         for (_, r), w, h in zip(b.iterrows(), waves, hyps):
             records.append({
                 "model": name, "utt_id": r["utt_id"], "condition": r["condition"],
@@ -75,23 +114,29 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
                 "reference": r["transcript"], "hypothesis": h, "audio_sec": len(w) / sr,
                 # batch time apportioned by audio duration
                 "inference_sec": elapsed * (len(w) / sr) / audio_sec if audio_sec else float("nan"),
+                "failed": failed,
             })
+        # Saved after every batch, so an interrupted run loses at most one batch.
+        pd.DataFrame(records).to_csv(partial_path, mode="a", header=not partial_path.exists(), index=False)
         if (bi + 1) % 50 == 0:
-            log.info("%s: %d/%d batches", name, bi + 1, len(batches))
+            log.info("%s: %d/%d batches (%d rows were done before this session)", name, bi + 1, len(batches),
+                     len(done))
 
-    pred = pd.DataFrame(records)
-    pred_path = out_dir / f"predictions_{tag}_{name}.csv"
+    pred = pd.read_csv(partial_path, keep_default_na=False)
     pred.to_csv(pred_path, index=False)
     meta = {
         "model": model.describe(), "tag": tag, "device": device, "batch_size": batch_size,
-        "n_rows": len(pred), "n_failed": int(pred["hypothesis"].isna().sum()),
+        "n_rows": len(pred), "n_failed": int(pred["failed"].astype(str).str.lower().eq("true").sum()),
+        "rows_from_earlier_sessions": len(done),
         "warmup_batches": cfg["inference"]["warmup_batches"], "model_load_sec": round(load_sec, 2),
         "timing_method": "time.perf_counter around model.transcribe with CUDA synchronize; "
                          "waveform generation and warm-up excluded",
         "peak_gpu_memory_gb": round(torch.cuda.max_memory_allocated() / 1e9, 3) if device == "cuda" else None,
-        "environment": environment_info(), "errors": errors, "config_path": cfg["_config_path"],
+        "environment": env, "errors": errors, "config_path": cfg["_config_path"],
     }
     save_json(meta, out_dir / f"run_{tag}_{name}.json")
+    partial_path.unlink()
+    setup_path.unlink()
     log.info("Wrote %s (%d rows, %d failed)", pred_path, len(pred), meta["n_failed"])
 
     del model
@@ -105,6 +150,7 @@ def main() -> None:
     parser.add_argument("--models", nargs="+", default=list(MODEL_NAMES), choices=MODEL_NAMES)
     parser.add_argument("--split", default="test")
     parser.add_argument("--pilot", action="store_true")
+    parser.add_argument("--resume", action="store_true", help="Continue an unfinished run (skips rows already done)")
     parser.add_argument("--limit", type=int, default=None, help="Debug only: first N utterances")
     args = parser.parse_args()
 
@@ -120,7 +166,7 @@ def main() -> None:
         conditions = conditions[conditions["utt_id"].isin(keep)]
         tag += f"_limit{args.limit}"
     for name in args.models:
-        run_model(cfg, name, conditions, tag, device)
+        run_model(cfg, name, conditions, tag, device, resume=args.resume)
 
 
 if __name__ == "__main__":
