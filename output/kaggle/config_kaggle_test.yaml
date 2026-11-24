@@ -1,0 +1,145 @@
+project:
+  name: indonesian-asr-noise-robustness
+  seed: 42
+paths:
+  speech_root: /tmp/aol_dl_data/indonesia_asr
+  speech_metadata: /tmp/aol_dl_data/indonesia_asr/metadata/dataset_metadata_public.csv
+  speech_split_assignment: /tmp/aol_dl_data/indonesia_asr/splits/speaker_split_assignment_public.csv
+  noise_root: /tmp/aol_dl_data/ms_snsd
+  manifests_dir: /tmp/aol_dl_data/manifests
+  pilot_cache_dir: data/processed/pilot_cache
+  models_dir: /kaggle/working/models
+  logs_dir: /kaggle/working/logs
+  predictions_dir: /kaggle/working/predictions
+  plots_dir: /kaggle/working/plots
+datasets:
+  speech:
+    hf_repo_id: Atika88/Indonesian-ASR-11-Class-Dataset
+    revision: 97a862f3f1315649a3520bb88d8dc424be96fbcf
+  noise:
+    git_url: https://github.com/microsoft/MS-SNSD.git
+    pools:
+    - noise_train
+    - noise_test
+audio:
+  target_sample_rate: 16000
+  convert_to_mono: true
+speech_audit:
+  min_duration_sec: 1.5
+  max_duration_sec: 15.0
+  min_chars_per_sec: 5.0
+  max_chars_per_sec: 30.0
+  auto_review:
+    enabled: true
+    max_clipped_fraction: 0.01
+    active_threshold_db: 30.0
+    min_active_chars_per_sec: 3.0
+    max_active_chars_per_sec: 30.0
+  silence_rms_dbfs: -50.0
+  clipping_peak: 0.999
+  clipping_fraction_review: 0.001
+  metadata_duration_tolerance_sec: 0.05
+  exclude_synthetic: true
+  num_workers: 4
+noise_audit:
+  speech_like_categories:
+  - Babble
+  - NeighborSpeaking
+  - AirportAnnouncements
+  review_categories:
+  - Cafe
+  - CafeTeria
+  - Restaurant
+  - Station
+  - Metro
+  - Square
+  - Office
+  - Hallway
+  include_music: false
+  speech_check_chars_per_sec: 4.0
+  category_aliases:
+    AirportAnnouncement: AirportAnnouncements
+    Neighbor: NeighborSpeaking
+  silence_rms_dbfs: -60.0
+  num_workers: 4
+text_normalization:
+  lowercase: true
+  strip_accents: true
+  hyphen_to_space: true
+  remove_punctuation: true
+  numbers_to_words: true
+  percent_to_word: true
+mixing:
+  snr_db:
+  - 20
+  - 10
+  - 5
+  - 0
+  eval_noise_pool: noise_test
+  augmentation_noise_pool: noise_train
+  power_method: active_speech
+  active_frame_ms: 25
+  active_hop_ms: 10
+  active_threshold_db: 40.0
+  noise_assignment: round_robin_category
+  realizations_per_utterance: 1
+  on_clipping: scale_both
+  gain_scope: utterance
+  clip_peak: 0.999
+  snr_tolerance_db: 0.1
+pilot:
+  split: test
+  n_utterances: 30
+models:
+  custom_cnn_bilstm_ctc:
+    features:
+      sample_rate: 16000
+      n_fft: 400
+      win_length: 400
+      hop_length: 160
+      n_mels: 80
+      log_offset: 1.0e-06
+      per_utterance_norm: true
+    architecture:
+      cnn_channels:
+      - 32
+      - 32
+      lstm_hidden: 256
+      lstm_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.0005
+      weight_decay: 1.0e-05
+      max_epochs: 50
+      early_stopping_patience: 5
+      grad_clip: 5.0
+      selection_metric: cer
+      max_train_duration_sec: 30
+      max_train_utterances: null
+      max_val_utterances: 2000
+      num_workers: 2
+      amp: true
+    checkpoint: /kaggle/working/models/custom_cnn_bilstm_ctc/best.pt
+    batch_size: 16
+  wav2vec2:
+    checkpoint: indonesian-nlp/wav2vec2-large-xlsr-indonesian
+    revision: 68fbcbd947e32184a704b401b71973d6c27de0c1
+    batch_size: 8
+    fp16: false
+  whisper:
+    checkpoint: openai/whisper-large-v3
+    revision: 06f233fe06e710322aca913c1bc4249a0d71fce1
+    language: indonesian
+    task: transcribe
+    num_beams: 1
+    max_new_tokens: 225
+    batch_size: 16
+    fp16: true
+inference:
+  warmup_batches: 1
+  device: auto
+evaluation:
+  bootstrap_resamples: 1000
+  confidence_level: 0.95
+  mismatch_clean_cer: 30.0

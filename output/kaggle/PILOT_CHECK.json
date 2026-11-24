@@ -1,0 +1,18 @@
+{
+  "pairing_same": true,
+  "custom_cnn_bilstm_ctc": {
+    "identical": 150,
+    "rows": 150,
+    "rtfx_t4": 1310.17
+  },
+  "wav2vec2": {
+    "identical": 147,
+    "rows": 150,
+    "rtfx_t4": 80.72
+  },
+  "whisper": {
+    "identical": 150,
+    "rows": 150,
+    "rtfx_t4": 19.17
+  }
+}
