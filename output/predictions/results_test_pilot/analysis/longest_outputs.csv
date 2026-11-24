@@ -1,0 +1,10 @@
+model,condition,noise_category,utt_id,reference,output,length_ratio,wer
+custom_cnn_bilstm_ctc,snr_10dB,Typing,Imperative_M12_M12_Imperative_take01_10,jelaskan cara menggunakan penghapus ini kepada mahasiswa,atan kan jelaskan cara mnggunakan penghapus ini kepada mahasiswa,1.2857142857142858,42.857142857142854
+custom_cnn_bilstm_ctc,snr_10dB,CopyMachine,Interrogative_M8_M8_Interrogative_take16_19,bagaimana cara mengakses wi fi kampus,bagaimana cara mengakes wi fi kam p,1.1666666666666667,50.0
+custom_cnn_bilstm_ctc,snr_5dB,Typing,Imperative_M12_M12_Imperative_take01_10,jelaskan cara menggunakan penghapus ini kepada mahasiswa,paa jelaskan cara mnggunakan penghapus ini kepada mahasiswa,1.1428571428571428,28.57142857142857
+wav2vec2,clean,,Scheduling_M12_M12_Scheduling_take10_17,tolong jadwalkan penandatanganan mou dengan perguruan tinggi mitra,tolong jawalkan pena datangan ema yu dengan perguran tinggi metera,1.25,87.5
+wav2vec2,clean,,Interrogative_M4_M4_Interrogative_take03_06,kapan jadwal ujian akhir semester,kapan yan ual ujian akhir swester,1.2,60.0
+wav2vec2,snr_0dB,AirConditioner,Declarative_M12_M12_Declarative_take11_01,saya membutuhkan rekomendasi tempat wisata di kota palembang,saya membutuhkan rek komuda si tempat bisapa di kota pale tak,1.375,75.0
+whisper,snr_5dB,VacuumCleaner,Interrogative_M4_M4_Interrogative_take03_06,kapan jadwal ujian akhir semester,kapan yang ulu ujian alis mister,1.2,80.0
+whisper,snr_0dB,Munching,Scheduling_M12_M12_Scheduling_take23_12,atur jadwal monitoring program bantuan sosial bulan ini,akhirnya waktu di awal monitoring program bantuan sosial bulan ini,1.25,50.0
+whisper,snr_0dB,VacuumCleaner,Interrogative_M4_M4_Interrogative_take03_06,kapan jadwal ujian akhir semester,kapan yang gue ujian alis mister,1.2,80.0

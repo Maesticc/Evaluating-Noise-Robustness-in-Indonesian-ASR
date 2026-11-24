@@ -1,0 +1,13 @@
+model,condition,hardest,hardest_wer,easiest,easiest_wer,spread_pp,ranking_hardest_first
+custom_cnn_bilstm_ctc,snr_20dB,CopyMachine,38.46153846153847,Munching,5.454545454545454,33.006993006993014,CopyMachine > VacuumCleaner > ShuttingDoor > Typing > AirConditioner > Munching
+custom_cnn_bilstm_ctc,snr_10dB,CopyMachine,69.23076923076923,AirConditioner,13.953488372093023,55.27728085867621,CopyMachine > VacuumCleaner > ShuttingDoor > Munching > Typing > AirConditioner
+custom_cnn_bilstm_ctc,snr_5dB,CopyMachine,88.46153846153845,AirConditioner,37.2093023255814,51.252236135957055,CopyMachine > VacuumCleaner > ShuttingDoor > Typing > Munching > AirConditioner
+custom_cnn_bilstm_ctc,snr_0dB,CopyMachine,100.0,ShuttingDoor,60.416666666666664,39.583333333333336,CopyMachine > VacuumCleaner > AirConditioner > Munching > Typing > ShuttingDoor
+wav2vec2,snr_20dB,Typing,46.93877551020408,ShuttingDoor,14.583333333333334,32.355442176870746,Typing > CopyMachine > VacuumCleaner > Munching > AirConditioner > ShuttingDoor
+wav2vec2,snr_10dB,CopyMachine,53.84615384615385,AirConditioner,20.930232558139537,32.91592128801431,CopyMachine > Typing > VacuumCleaner > Munching > ShuttingDoor > AirConditioner
+wav2vec2,snr_5dB,VacuumCleaner,65.38461538461539,ShuttingDoor,29.166666666666668,36.217948717948715,VacuumCleaner > CopyMachine > Typing > Munching > AirConditioner > ShuttingDoor
+wav2vec2,snr_0dB,VacuumCleaner,80.76923076923077,ShuttingDoor,39.58333333333333,41.185897435897445,VacuumCleaner > CopyMachine > AirConditioner > Typing > Munching > ShuttingDoor
+whisper,snr_20dB,CopyMachine,11.538461538461538,AirConditioner,2.3255813953488373,9.2128801431127,CopyMachine > ShuttingDoor > Typing > VacuumCleaner > Munching > AirConditioner
+whisper,snr_10dB,CopyMachine,15.384615384615385,VacuumCleaner,1.9230769230769231,13.461538461538462,CopyMachine > Typing > ShuttingDoor > Munching > AirConditioner > VacuumCleaner
+whisper,snr_5dB,CopyMachine,23.076923076923077,AirConditioner,6.976744186046512,16.100178890876563,CopyMachine > VacuumCleaner > Typing > ShuttingDoor > Munching > AirConditioner
+whisper,snr_0dB,CopyMachine,48.07692307692308,ShuttingDoor,8.333333333333332,39.74358974358975,CopyMachine > AirConditioner > VacuumCleaner > Typing > Munching > ShuttingDoor
