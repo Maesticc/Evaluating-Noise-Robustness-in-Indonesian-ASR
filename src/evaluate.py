@@ -16,10 +16,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 
 import jiwer
+import matplotlib
+
+matplotlib.use("Agg")  # draw to files only, no window
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.ticker import FuncFormatter
 
 from src.model_loader import MODEL_NAMES
 from src.preprocessing import normalize_text
@@ -153,73 +162,167 @@ def runtime_table(rtfx: pd.DataFrame, pred_dir, tag: str) -> pd.DataFrame:
     return rtfx.merge(pd.DataFrame(rows), on="model", how="left")
 
 
+# ---------------------------------------------------------------------------------------------------------
+# Plots. Every model keeps one fixed colour and position in every plot, so plots can be compared directly.
+# ---------------------------------------------------------------------------------------------------------
+MODEL_LABELS = {"custom_cnn_bilstm_ctc": "CNN-BiLSTM-CTC", "wav2vec2": "Wav2Vec2 XLSR",
+                "whisper": "Whisper Large-v3"}
+MODEL_COLORS = {"custom_cnn_bilstm_ctc": "#2a78d6", "wav2vec2": "#eb6834", "whisper": "#1baf7a"}
+CONDITION_LABELS = {"clean": "Clean", "snr_20dB": "20 dB", "snr_10dB": "10 dB", "snr_5dB": "5 dB",
+                    "snr_0dB": "0 dB"}
+TEXT, TEXT_SOFT, GRID = "#0b0b0b", "#52514e", "#e4e3df"
+HEATMAP_COLORS = ["#f7fafe", "#cde2fb", "#86b6ef", "#3987e5", "#256abf", "#184f95", "#0d366b"]  # light = low WER
+PLOT_STYLE = {"axes.spines.top": False, "axes.spines.right": False, "axes.edgecolor": "#8a8984",
+              "axes.labelcolor": TEXT, "axes.titlesize": 12, "axes.titlecolor": TEXT, "xtick.color": TEXT_SOFT,
+              "ytick.color": TEXT_SOFT, "font.size": 10, "legend.frameon": False}
+
+
+def model_order(models) -> list[str]:
+    """CTC, Wav2Vec2, Whisper (then any other model), independent of the order in the data."""
+    known = [m for m in MODEL_LABELS if m in set(models)]
+    return known + sorted(set(models) - set(known))
+
+
+def model_label(model: str) -> str:
+    return MODEL_LABELS.get(model, model)
+
+
+def model_color(model: str) -> str:
+    return MODEL_COLORS.get(model, "#8a8984")
+
+
+def noise_label(category: str) -> str:
+    """'CopyMachine' -> 'Copy machine'."""
+    return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", category).capitalize()
+
+
+def plot_metric_vs_snr(by_cond: pd.DataFrame, order: list[str], metric: str):
+    """One line per model from clean audio to the loudest noise (0 dB); the shaded band is the 95 % CI."""
+    x = np.arange(len(order))
+    fig, ax = plt.subplots(figsize=(8, 4.8))
+    for m in model_order(by_cond["model"].unique()):
+        g = by_cond[by_cond["model"] == m].set_index("condition").loc[order]
+        if f"{metric}_ci_low" in g:
+            ax.fill_between(x, g[f"{metric}_ci_low"], g[f"{metric}_ci_high"], color=model_color(m), alpha=0.2,
+                            linewidth=0)
+        ax.plot(x, g[metric], color=model_color(m), linewidth=2, marker="o", markersize=7,
+                markeredgecolor="white", markeredgewidth=1.5, label=model_label(m))
+        # model name and last value at the end of the line, so the plot can be read without the legend
+        ax.annotate(f"{model_label(m)}  {g[metric].iloc[-1]:.1f}", (x[-1], g[metric].iloc[-1]), xytext=(10, 0),
+                    textcoords="offset points", va="center", color=TEXT)
+    ax.set_xticks(x, [CONDITION_LABELS.get(c, c) for c in order])
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("Noise level (SNR, lower = louder noise)")
+    ax.set_ylabel(f"{metric.upper()} (%)")
+    ax.set_title(f"{metric.upper()} per noise level (lower is better)")
+    ax.grid(axis="y", color=GRID)
+    ax.legend(loc="upper left")
+    return fig
+
+
+def plot_degradation(by_cond: pd.DataFrame, order: list[str]):
+    """How much worse each model gets compared with clean audio: in percentage points and relative (%)."""
+    noisy = [c for c in order if c != "clean"]
+    models = model_order(by_cond["model"].unique())
+    x, width = np.arange(len(noisy)), 0.8 / len(models)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
+    panels = [("abs_wer_degradation", "WER increase vs clean (percentage points)"),
+              ("rel_wer_degradation", "WER increase vs clean (relative, %)")]
+    for ax, (col, title) in zip(axes, panels):
+        for i, m in enumerate(models):
+            g = by_cond[by_cond["model"] == m].set_index("condition").loc[noisy]
+            ax.bar(x + (i - (len(models) - 1) / 2) * width, g[col], width * 0.9, color=model_color(m),
+                   label=model_label(m))
+        ax.set_xticks(x, [CONDITION_LABELS.get(c, c) for c in noisy])
+        ax.set_xlabel("Noise level (SNR, lower = louder noise)")
+        ax.set_title(title)
+        ax.grid(axis="y", color=GRID)
+        ax.set_axisbelow(True)
+    axes[0].legend(loc="upper left")
+    fig.tight_layout()
+    return fig
+
+
+def plot_noise_heatmap(by_cat: pd.DataFrame, order: list[str]):
+    """WER per noise type and noise level, one panel per model, all on the same colour scale (0-100 %)."""
+    models = model_order(by_cat["model"].unique())
+    levels = [c for c in order if c in set(by_cat["condition"])]
+    rows = by_cat.groupby("noise_category")["wer"].mean().sort_values(ascending=False).index  # hardest on top
+    cmap = LinearSegmentedColormap.from_list("wer", HEATMAP_COLORS)
+    fig, axes = plt.subplots(1, len(models) + 1, figsize=(4.4 * len(models) + 1.4, 4.8),
+                             gridspec_kw={"width_ratios": [1] * len(models) + [0.05]})
+    for i, (ax, m) in enumerate(zip(axes, models)):
+        d = by_cat[by_cat["model"] == m]
+        table = d.pivot(index="noise_category", columns="condition", values="wer")[levels]
+        if "wer_clean" in d:  # clean WER of the same utterances that were mixed with this noise type
+            table.insert(0, "clean", d.groupby("noise_category")["wer_clean"].first())
+        table = table.reindex(rows)
+        table.index = [noise_label(c) for c in table.index]
+        table.columns = [CONDITION_LABELS.get(c, c) for c in table.columns]
+        sns.heatmap(table, annot=True, fmt=".1f", cmap=cmap, vmin=0, vmax=100, linewidths=2, linecolor="white",
+                    ax=ax, cbar=i == 0, cbar_ax=axes[-1] if i == 0 else None, cbar_kws={"label": "WER (%)"})
+        ax.set_title(model_label(m))
+        ax.set_xlabel("Noise level (SNR)")
+        ax.set_ylabel("")
+        ax.tick_params(length=0, axis="both")
+        ax.tick_params(axis="y", rotation=0)
+        if i > 0:
+            ax.set_yticklabels([])
+    fig.suptitle("WER (%) per noise type, same colour scale for every model", color=TEXT, fontsize=12)
+    fig.tight_layout()
+    return fig
+
+
+def plot_accuracy_vs_speed(trade_off: pd.DataFrame):
+    """Speed (RTFx) against WER on clean audio (circle) and at 0 dB (square). The line between the two
+    points shows how much accuracy the model loses in the loudest noise."""
+    t = trade_off.set_index("model")
+    fig, ax = plt.subplots(figsize=(8, 4.8))
+    for m in model_order(t.index):
+        r = t.loc[m]
+        points = [(c, marker) for c, marker in (("clean", "o"), ("snr_0dB", "s")) if c in r and pd.notna(r[c])]
+        ys = [r[c] for c, _ in points]
+        ax.plot([r["rtfx"]] * len(ys), ys, color=model_color(m), linewidth=2, alpha=0.4)
+        for (_, marker), y in zip(points, ys):
+            ax.scatter(r["rtfx"], y, marker=marker, s=80, color=model_color(m), edgecolor="white", linewidth=1.5,
+                       zorder=3)
+            ax.annotate(f"{y:.1f}", (r["rtfx"], y), xytext=(9, 0), textcoords="offset points", va="center",
+                        color=TEXT_SOFT, fontsize=9)
+        speed = f"{r['rtfx']:,.1f}" if r["rtfx"] < 10 else f"{r['rtfx']:,.0f}"
+        ax.annotate(f"{model_label(m)}\n{speed}× real time", (r["rtfx"], max(ys)), xytext=(0, 12),
+                    textcoords="offset points", ha="center", color=TEXT)
+    ax.set_xscale("log")
+    ax.set_xlim(t["rtfx"].min() / 2.5, t["rtfx"].max() * 2.5)
+    ax.set_ylim(0, t[[c for c in ("clean", "snr_0dB") if c in t]].max().max() * 1.3)
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
+    ax.set_xlabel("Speed: RTFx (log scale, higher = faster)")
+    ax.set_ylabel("WER (%) (lower is better)")
+    ax.set_title("Accuracy vs speed")
+    ax.grid(color=GRID)
+    ax.set_axisbelow(True)
+    ax.legend(handles=[Line2D([], [], marker="o", linestyle="", color="#8a8984", markersize=8, label="Clean"),
+                       Line2D([], [], marker="s", linestyle="", color="#8a8984", markersize=8,
+                              label="0 dB (loudest noise)")], loc="lower center")
+    return fig
+
+
+def save_figure(fig, path) -> None:
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def make_plots(by_cond: pd.DataFrame, by_cat: pd.DataFrame, plots_dir,
                trade_off: pd.DataFrame | None = None) -> None:
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
     order = [c for c in CONDITION_ORDER if c in set(by_cond["condition"])]
-    labels = [c.replace("snr_", "").replace("dB", " dB") for c in order]
-    for metric in ("wer", "cer"):
-        fig, ax = plt.subplots(figsize=(7, 4.5))
-        for model, g in by_cond.groupby("model"):
-            g = g.set_index("condition").loc[order]
-            ax.plot(labels, g[metric], marker="o", label=model)
-            if f"{metric}_ci_low" in g:
-                ax.fill_between(labels, g[f"{metric}_ci_low"], g[f"{metric}_ci_high"], alpha=0.15)
-        ax.set_xlabel("Condition (SNR)")
-        ax.set_ylabel(f"{metric.upper()} (%)")
-        ax.set_title(f"{metric.upper()} vs SNR")
-        ax.grid(alpha=0.3)
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(plots_dir / f"{metric}_vs_snr.png", dpi=150)
-        plt.close(fig)
-
-    noisy = by_cond[by_cond["condition"] != "clean"]
-    if not noisy.empty:
-        fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
-        for ax, col, title in zip(axes, ["abs_wer_degradation", "rel_wer_degradation"],
-                                  ["Absolute WER degradation (pp)", "Relative WER degradation (%)"]):
-            sns.barplot(data=noisy, x="condition", y=col, hue="model", order=order[1:], ax=ax)
-            ax.set_title(title)
-            ax.set_xlabel("Condition")
-            ax.grid(axis="y", alpha=0.3)
-        fig.tight_layout()
-        fig.savefig(plots_dir / "wer_degradation.png", dpi=150)
-        plt.close(fig)
-
-    if not by_cat.empty:
-        models = sorted(by_cat["model"].unique())
-        fig, axes = plt.subplots(1, len(models), figsize=(5 * len(models), 4.5), squeeze=False)
-        for ax, model in zip(axes[0], models):
-            pivot = by_cat[by_cat["model"] == model].pivot(index="noise_category", columns="condition", values="wer")
-            pivot = pivot[[c for c in order if c in pivot.columns]]
-            sns.heatmap(pivot, annot=True, fmt=".1f", cmap="Reds", ax=ax, cbar=False)
-            ax.set_title(f"{model}: WER (%)")
-        fig.tight_layout()
-        fig.savefig(plots_dir / "wer_heatmap_noise_category.png", dpi=150)
-        plt.close(fig)
-
-    if trade_off is not None and not trade_off.empty:
-        fig, ax = plt.subplots(figsize=(7, 4.5))
-        for cond, marker in (("clean", "o"), ("snr_0dB", "s")):
-            if cond in trade_off:
-                ax.scatter(trade_off["rtfx"], trade_off[cond], marker=marker, label=f"WER {cond}")
-        for _, r in trade_off.iterrows():
-            ax.annotate(r["model"], (r["rtfx"], r.get("clean", np.nan)), textcoords="offset points", xytext=(5, 5))
-        ax.set_xscale("log")
-        ax.set_xlabel("RTFx (log scale, higher = faster)")
-        ax.set_ylabel("WER (%)")
-        ax.set_title("Accuracy vs. inference speed")
-        ax.grid(alpha=0.3)
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(plots_dir / "accuracy_vs_speed.png", dpi=150)
-        plt.close(fig)
+    with plt.rc_context(PLOT_STYLE):
+        for metric in ("wer", "cer"):
+            save_figure(plot_metric_vs_snr(by_cond, order, metric), plots_dir / f"{metric}_vs_snr.png")
+        if (by_cond["condition"] != "clean").any():
+            save_figure(plot_degradation(by_cond, order), plots_dir / "wer_degradation.png")
+        if not by_cat.empty:
+            save_figure(plot_noise_heatmap(by_cat, order), plots_dir / "wer_heatmap_noise_category.png")
+        if trade_off is not None and not trade_off.empty:
+            save_figure(plot_accuracy_vs_speed(trade_off), plots_dir / "accuracy_vs_speed.png")
 
 
 def accuracy_vs_speed(by_cond: pd.DataFrame, rtfx: pd.DataFrame) -> pd.DataFrame:
