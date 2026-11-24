@@ -1,4 +1,4 @@
-# Raw datasets, generated audio and caches (see data/README.md for download steps)
+# Raw datasets, generated audio and caches (see README.md for download steps)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/pilot_cache/*

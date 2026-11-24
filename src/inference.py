@@ -1,16 +1,10 @@
-"""Run every model on the same clean and noisy utterances and record predictions and timing.
+"""Run every model on the same clean and noisy utterances and save the transcripts and timing.
 
-Noisy waveforms are regenerated deterministically from the conditions manifest, so all
-models receive identical inputs. Timing covers model inference only (waveform generation
-excluded) and skips warm-up batches.
-
-Predictions are appended to `predictions_<tag>_<model>.partial.csv` after every batch. If a run
-stops (for example when a Kaggle session ends), run the same command with --resume: rows that
-are already done are skipped. The finished file is `predictions_<tag>_<model>.csv`.
+Timing covers the model only (no waveform generation, no warm-up batch). Predictions are saved
+after every batch to a .partial.csv file, so a stopped run continues with --resume.
 
 Usage:
-    python -m src.inference --models whisper wav2vec2 custom_cnn_bilstm_ctc [--pilot] [--split test] [--resume]
-                            [--max-hours H]
+    python -m src.inference [--models ...] [--pilot] [--resume] [--max-hours H]
 """
 
 from __future__ import annotations
@@ -47,8 +41,7 @@ def remaining_rows(rows: pd.DataFrame, done: pd.DataFrame) -> pd.DataFrame:
 
 def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: str, resume: bool = False,
               deadline: float | None = None) -> bool:
-    """Run one model on every row. Returns False when it stopped at `deadline` (a time.time() value)
-    before all rows were done; the partial file is kept and the run is continued with resume=True."""
+    """Run one model on every row. Returns False if it stopped at `deadline` (time.time()) first."""
     log = get_logger("inference", project_path(cfg["paths"]["logs_dir"]) / f"inference_{tag}.log")
     out_dir = ensure_dir(project_path(cfg["paths"]["predictions_dir"]))
     sr = cfg["audio"]["target_sample_rate"]
@@ -66,7 +59,7 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
     if device == "cuda":
         torch.cuda.reset_peak_memory_stats()
 
-    # A run may only be continued on the same model, GPU and batch size, so its timing stays comparable.
+    # resume only on the same model, GPU and batch size, so the timing stays comparable
     env = environment_info()
     setup = json.loads(json.dumps({"model": model.describe(), "device": device, "gpu": env.get("gpu"),
                                    "batch_size": batch_size, "n_rows": len(conditions)}, default=str))
@@ -84,7 +77,7 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
             partial_path.unlink()
         save_json(setup, setup_path)
 
-    # Sort by duration inside each condition to reduce padding; order does not affect results.
+    # sorted by duration to reduce padding (the order does not change the results)
     rows = conditions.sort_values(["condition", "duration_sec", "utt_id"]).reset_index(drop=True)
     rows = remaining_rows(rows, done)
     batches = [rows.iloc[i:i + batch_size] for i in range(0, len(rows), batch_size)]
@@ -125,7 +118,6 @@ def run_model(cfg: dict, name: str, conditions: pd.DataFrame, tag: str, device: 
                 "inference_sec": elapsed * (len(w) / sr) / audio_sec if audio_sec else float("nan"),
                 "failed": failed,
             })
-        # Saved after every batch, so an interrupted run loses at most one batch.
         pd.DataFrame(records).to_csv(partial_path, mode="a", header=not partial_path.exists(), index=False)
         if (bi + 1) % 50 == 0:
             log.info("%s: %d/%d batches (%d rows were done before this session)", name, bi + 1, len(batches),

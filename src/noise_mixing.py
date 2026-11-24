@@ -1,18 +1,12 @@
-"""Controlled noise mixing at target SNRs with achieved-SNR verification.
+"""Mix speech with noise at a target SNR: SNR (dB) = 10 * log10(P_speech / P_noise).
 
-SNR (dB) = 10 * log10(P_speech / P_noise)
-
-Speech power is estimated over *active-speech frames* (frames within `active_threshold_db`
-of the loudest frame) so long leading/trailing pauses do not distort the target SNR.
-Noise power is measured over the full noise segment that is actually added.
-
-Mixing is deterministic and on-the-fly: the pairing manifest stores noise file, offset and
-seed, so any condition can be regenerated exactly and identical waveforms reach every model.
+Speech power is measured over active-speech frames only, so pauses do not change the SNR.
+The conditions manifest stores the noise file, offset and gain of every mixture, so each
+waveform can be regenerated exactly and every model gets the same input.
 
 Usage:
     python -m src.noise_mixing build-pairs [--split test] [--pilot]
-    python -m src.noise_mixing build-pairs --split val --pilot   # development subset (noise_train pool)
-    python -m src.noise_mixing export-pilot          # write pilot WAVs for listening
+    python -m src.noise_mixing export-pilot     # pilot mixtures as WAV files, for listening
 """
 
 from __future__ import annotations
@@ -24,14 +18,13 @@ import numpy as np
 import pandas as pd
 import soundfile as sf
 
-from src.preprocessing import standardize_audio
+from src.data_loader import eligible_speech, load_audio
 from src.utils import ensure_dir, get_logger, load_config, manifest_path, project_path, stable_seed
 
 log = get_logger("noise_mixing")
 EPS = 1e-12
 
 
-# --------------------------------------------------------------------------- power / SNR
 def active_speech_mask(audio: np.ndarray, sr: int, frame_ms: float, hop_ms: float,
                        threshold_db: float) -> np.ndarray:
     """Mark which samples belong to active speech (True) and which to silence (False).
@@ -68,7 +61,6 @@ def snr_db(p_signal: float, p_noise: float) -> float:
     return float(10 * np.log10((p_signal + EPS) / (p_noise + EPS)))
 
 
-# --------------------------------------------------------------------------- mixing
 def select_noise_segment(noise: np.ndarray, length: int, offset: int) -> np.ndarray:
     """Crop (or tile, if the noise is shorter than the speech) starting at `offset`."""
     if noise.size >= length:
@@ -79,10 +71,10 @@ def select_noise_segment(noise: np.ndarray, length: int, offset: int) -> np.ndar
 
 def mix_at_snr(speech: np.ndarray, noise_seg: np.ndarray, target_snr: float, mcfg: dict,
                sr: int, gain: float | None = None) -> tuple[np.ndarray, dict]:
-    """Scale noise to the target SNR, add it, apply the output gain, and report achieved SNR.
+    """Scale the noise to the target SNR, add it to the speech and report the achieved SNR.
 
-    `gain` is the output gain applied to speech and noise alike (so the SNR is unchanged).
-    None derives it from this mixture alone (per-condition clipping protection).
+    `gain` scales speech and noise alike (the SNR stays the same) to prevent clipping.
+    None computes it from this mixture alone.
     """
     if mcfg["power_method"] == "active_speech":
         mask = active_speech_mask(speech, sr, mcfg["active_frame_ms"], mcfg["active_hop_ms"],
@@ -121,17 +113,13 @@ def mix_at_snr(speech: np.ndarray, noise_seg: np.ndarray, target_snr: float, mcf
     return mixture.astype(np.float32), info
 
 
-# --------------------------------------------------------------------------- loading
 @lru_cache(maxsize=256)
 def _load_noise_cached(abs_path: str, sr: int) -> np.ndarray:
-    audio, _ = standardize_audio(abs_path, sr)
-    return audio
+    return load_audio(abs_path, sr)[0]
 
 
 def load_speech(cfg: dict, audio_path: str) -> np.ndarray:
-    audio, _ = standardize_audio(project_path(cfg["paths"]["speech_root"]) / audio_path,
-                                 cfg["audio"]["target_sample_rate"])
-    return audio
+    return load_audio(project_path(cfg["paths"]["speech_root"]) / audio_path, cfg["audio"]["target_sample_rate"])[0]
 
 
 def load_noise(cfg: dict, noise_path: str) -> np.ndarray:
@@ -143,21 +131,12 @@ def condition_name(snr: float | None) -> str:
     return "clean" if snr is None or (isinstance(snr, float) and np.isnan(snr)) else f"snr_{int(snr)}dB"
 
 
-def _stored_gain(row: pd.Series) -> float | None:
-    """Output gain recorded in the conditions manifest (None for manifests without it)."""
-    value = row.get("output_gain", None)
-    if value is None or value == "":
-        return None
-    value = float(value)
-    return None if np.isnan(value) else value
-
-
 def generate_waveform(cfg: dict, row: pd.Series) -> np.ndarray:
     """Regenerate the exact waveform of one row of the conditions manifest."""
     speech = load_speech(cfg, row["audio_path"])
-    gain = _stored_gain(row)
+    gain = float(row["output_gain"])
     if row["condition"] == "clean":
-        return speech if gain is None else (speech.astype(np.float64) * gain).astype(np.float32)
+        return (speech.astype(np.float64) * gain).astype(np.float32)
     noise = load_noise(cfg, row["noise_path"])
     seg = select_noise_segment(noise, speech.size, int(row["noise_offset"]))
     mixture, _ = mix_at_snr(speech, seg, float(row["target_snr_db"]), cfg["mixing"],
@@ -166,11 +145,8 @@ def generate_waveform(cfg: dict, row: pd.Series) -> np.ndarray:
 
 
 def utterance_gain(speech: np.ndarray, segments: list[np.ndarray], m: dict, sr: int) -> float:
-    """One output gain for every condition of an utterance (clean included).
-
-    It is the gain that keeps the loudest of all the utterance's mixtures below `clip_peak`, so
-    the speech component is identical in every condition and only the noise level differs.
-    """
+    """One gain for all conditions of an utterance (clean included), set by its loudest mixture,
+    so the speech level is the same in every condition and only the noise level differs."""
     peaks = [float(np.max(np.abs(speech)))]
     for seg in segments:
         for snr in m["snr_db"]:
@@ -178,7 +154,6 @@ def utterance_gain(speech: np.ndarray, segments: list[np.ndarray], m: dict, sr: 
     return min(1.0, m["clip_peak"] / max(peaks))
 
 
-# --------------------------------------------------------------------------- pairing
 def eligible_noise(cfg: dict, pool: str) -> pd.DataFrame:
     noise = pd.read_csv(manifest_path(cfg, "noise_manifest.csv"), keep_default_na=False)
     noise = noise[(noise["noise_pool"] == pool) & (noise["quality_status"] == "valid")]
@@ -188,12 +163,8 @@ def eligible_noise(cfg: dict, pool: str) -> pd.DataFrame:
 
 
 def pairing_noise(cfg: dict, split: str) -> pd.DataFrame:
-    """Noise files available for mixing utterances of `split`.
-
-    Test utterances use the evaluation pool. Other splits (e.g. a validation development subset)
-    use the other pool, restricted to the evaluation categories, so no test noise file is used for
-    any protocol or checkpoint decision.
-    """
+    """Noise files for mixing utterances of `split`. Only the test split uses the evaluation pool;
+    other splits use the other pool (same categories), so test noise never influences a decision."""
     m = cfg["mixing"]
     noise = eligible_noise(cfg, m["eval_noise_pool"])
     if split == "test":
@@ -203,24 +174,16 @@ def pairing_noise(cfg: dict, split: str) -> pd.DataFrame:
 
 
 def select_utterances(cfg: dict, split: str, pilot: bool) -> pd.DataFrame:
-    speech = pd.read_csv(manifest_path(cfg, "speech_manifest.csv"), keep_default_na=False)
-    speech = speech[(speech["official_split"] == split) &
-                    speech["eligible_primary"].astype(str).str.lower().eq("true")]
-    speech = speech.sort_values("utt_id").reset_index(drop=True)
-    if pilot:
+    speech = eligible_speech(cfg, split)
+    if pilot:  # fixed-seed random sample
         n = min(cfg["pilot"]["n_utterances"], len(speech))
-        # Stratify the pilot over categories/speakers by a fixed-seed shuffle.
         speech = speech.sample(n=n, random_state=cfg["project"]["seed"]).sort_values("utt_id")
     return speech.reset_index(drop=True)
 
 
 def build_pairs(cfg: dict, split: str = "test", pilot: bool = False) -> pd.DataFrame:
-    """Pair every utterance with a noise segment and expand to all conditions.
-
-    The same noise file and offset are used for every SNR of a given utterance/realization.
-    With `gain_scope: utterance` one output gain is applied to all of the utterance's conditions
-    (clean included), so the speech component is identical and only the noise level differs.
-    """
+    """Pair every utterance with one noise segment (same file and offset for every SNR) and write
+    one row per condition to conditions_<split>.csv."""
     m = cfg["mixing"]
     sr = cfg["audio"]["target_sample_rate"]
     seed = cfg["project"]["seed"]
@@ -279,7 +242,7 @@ def build_pairs(cfg: dict, split: str = "test", pilot: bool = False) -> pd.DataF
     noisy = df[df["condition"] != "clean"]
     err = (noisy["achieved_snr_db"] - noisy["target_snr_db"]).abs()
     bad = noisy[err > m["snr_tolerance_db"]]
-    log.info("Achieved-SNR max abs error: %.4f dB | outside tolerance: %d | clipping handled: %d | residual clipping: %d",
+    log.info("Achieved-SNR max error %.4f dB | outside tolerance %d | clipping handled %d | residual %d",
              err.max(), len(bad), int(noisy["clipping_detected"].sum()), int(noisy["residual_clipping"].sum()))
     if len(bad):
         log.warning("Rows outside SNR tolerance:\n%s", bad[["utt_id", "condition", "achieved_snr_db"]].head(20))

@@ -1,9 +1,9 @@
-"""Custom CNN-BiLSTM-CTC acoustic model, trained from scratch on the official training split.
+"""CNN-BiLSTM-CTC model, trained from scratch.
 
-Input:  log-Mel filterbank features (80 bins, 25 ms window, 10 ms hop; frozen in config.yaml)
-CNN:    2-D convolutions extract local time-frequency patterns (time downsampled x2)
-BiLSTM: models temporal context in both directions
-CTC:    character-level output with a blank token, greedy decoding
+Input:  log-Mel features (80 bins, 25 ms window, 10 ms hop)
+CNN:    local time-frequency patterns (time downsampled x2)
+BiLSTM: context in both directions
+CTC:    one character per frame plus a blank, greedy decoding
 """
 
 from __future__ import annotations
@@ -24,10 +24,7 @@ class CharVocab:
 
     @classmethod
     def from_texts(cls, texts) -> "CharVocab":
-        chars = set()
-        for t in texts:
-            chars.update(t)
-        return cls(sorted(chars))
+        return cls([c for t in texts for c in t])
 
     def encode(self, text: str) -> list[int]:
         return [self.stoi[c] for c in text if c in self.stoi]
@@ -63,9 +60,7 @@ class LogMelFeatures(nn.Module):
             feats = torch.log(self.mel(wave.float()) + self.log_offset)
         frame_lengths = lengths // self.hop_length + 1
         if self.per_utterance_norm:
-            # Normalize each utterance separately: every Mel bin gets mean 0 and variance 1.
-            # Only the real frames are used; the zero padding added to batch shorter utterances
-            # is ignored and stays 0.
+            # per utterance, every Mel bin to mean 0 and variance 1 (padding frames ignored, stay 0)
             normalized = torch.zeros_like(feats)
             for i in range(feats.size(0)):
                 n_frames = int(frame_lengths[i])

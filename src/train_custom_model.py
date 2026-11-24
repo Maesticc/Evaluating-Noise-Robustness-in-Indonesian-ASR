@@ -1,12 +1,10 @@
-"""Train the custom CNN-BiLSTM-CTC model from scratch on the official training split.
+"""Train the CNN-BiLSTM-CTC model from scratch on the training split.
 
-Validation split: checkpoint selection and early stopping. The test split is never touched here.
-
-After every epoch the full training state is saved to last.pt. If training is interrupted, run the
-same command again with --resume to continue from the last finished epoch.
+The validation split picks the best checkpoint and stops training early; the test split is not used.
+The training state is saved to last.pt after every epoch, so a stopped run continues with --resume.
 
 Usage:
-    python -m src.train_custom_model [--max-epochs N] [--max-train-utterances N] [--resume] [--max-hours H]
+    python -m src.train_custom_model [--max-epochs N] [--resume] [--max-hours H]
 """
 
 from __future__ import annotations
@@ -22,10 +20,11 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from src.custom_cnn_bilstm_ctc import CharVocab, CustomASR, pad_batch, save_checkpoint
+from src.data_loader import eligible_speech
 from src.noise_mixing import load_speech
 from src.preprocessing import normalize_text
-from src.utils import (ensure_dir, environment_info, get_logger, load_config, manifest_path,
-                       project_path, resolve_device, save_json, set_seed)
+from src.utils import (ensure_dir, environment_info, get_logger, load_config, project_path, resolve_device,
+                       save_json, set_seed)
 
 
 class SpeechDataset(Dataset):
@@ -47,12 +46,6 @@ def collate(batch):
     return list(waves), list(labels), list(texts)
 
 
-def load_split(cfg: dict, split: str) -> pd.DataFrame:
-    df = pd.read_csv(manifest_path(cfg, "speech_manifest.csv"), keep_default_na=False)
-    df = df[(df["official_split"] == split) & df["eligible_primary"].astype(str).str.lower().eq("true")]
-    return df.sort_values("utt_id").reset_index(drop=True)
-
-
 @torch.no_grad()
 def evaluate(model: CustomASR, loader: DataLoader, device: str) -> dict:
     model.eval()
@@ -67,11 +60,8 @@ def evaluate(model: CustomASR, loader: DataLoader, device: str) -> dict:
 
 def save_training_state(path, settings: dict, epoch: int, best: float, patience: int, history: list,
                         model, optim, sched, scaler) -> None:
-    """Save everything needed to continue training after an interruption (called after every epoch).
-
-    The state is written to a temporary file first and then renamed, so a crash while saving
-    never leaves a broken last.pt behind.
-    """
+    """Save everything needed to continue training. Written to a temporary file first, so a crash
+    while saving never leaves a broken last.pt."""
     state = {"settings": settings, "epoch": epoch, "best": best, "patience": patience, "history": history,
              "model": model.state_dict(), "optimizer": optim.state_dict(), "scheduler": sched.state_dict(),
              "scaler": scaler.state_dict()}
@@ -97,8 +87,7 @@ def load_training_state(path, settings: dict, model, optim, sched, scaler, devic
 
 def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = None, resume: bool = False,
           max_hours: float | None = None) -> None:
-    """`max_hours`: stop cleanly before this much time has passed (e.g. a Kaggle session limit), after the
-    last epoch that still fits; the run is then continued with `resume=True`."""
+    """`max_hours`: stop after the last epoch that fits in this time (e.g. a Kaggle session)."""
     session_start = time.time()
     mcfg = cfg["models"]["custom_cnn_bilstm_ctc"]
     tcfg = mcfg["training"]
@@ -108,7 +97,7 @@ def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = 
     out_dir = ensure_dir(project_path(mcfg["checkpoint"]).parent)
     log = get_logger("train_custom", project_path(cfg["paths"]["logs_dir"]) / "train_custom_model.log")
 
-    train_df, val_df = load_split(cfg, "train"), load_split(cfg, "val")
+    train_df, val_df = eligible_speech(cfg, "train"), eligible_speech(cfg, "val")
     dur = pd.to_numeric(train_df["duration_sec"], errors="coerce")
     train_df = train_df[dur <= tcfg["max_train_duration_sec"]]
     if max_train_utt or tcfg.get("max_train_utterances"):
@@ -156,13 +145,13 @@ def train(cfg: dict, max_epochs: int | None = None, max_train_utt: int | None = 
             log.info("Early stopping after %d epochs without improvement", patience)
             break
         if max_hours and epoch > start_epoch:
-            # Stop when one more epoch (as long as the average so far) would not fit in the time budget.
+            # stop when one more epoch of average length would not fit
             spent = time.time() - session_start
             if spent + spent / (epoch - start_epoch) > max_hours * 3600:
                 log.info("Time budget of %.1f h reached after epoch %d; continue with --resume", max_hours, epoch - 1)
                 stopped_by_time = True
                 break
-        # The shuffle order depends only on the epoch number, so a resumed run sees the same data order.
+        # shuffle order depends only on the epoch, so a resumed run sees the same order
         train_loader = DataLoader(train_set, batch_size=tcfg["batch_size"], shuffle=True, collate_fn=collate,
                                   num_workers=tcfg["num_workers"],
                                   generator=torch.Generator().manual_seed(seed + epoch))

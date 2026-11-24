@@ -1,8 +1,5 @@
-"""Load the three ASR systems behind one interface: `transcribe(list[np.ndarray]) -> list[str]`.
-
-Each pretrained checkpoint uses its own official processor/tokenizer; no shared feature
-extraction is forced across models. MFCCs are not used anywhere in these input paths.
-"""
+"""The three ASR models behind one interface: `transcribe(list of waveforms) -> list of texts`.
+Each pretrained model uses its own official processor; no features are shared between models."""
 
 from __future__ import annotations
 
@@ -50,20 +47,27 @@ class CustomModel(ASRModel):
                 "features": self.mcfg["features"], "architecture": self.mcfg["architecture"]}
 
 
-class Wav2Vec2Model(ASRModel):
+class PretrainedModel(ASRModel):
+    """A Hugging Face checkpoint, loaded at the exact commit (`revision`) given in the config."""
+
+    def __init__(self, cfg: dict, device: str, processor_class, model_class):
+        self.mcfg = cfg["models"][self.name]
+        self.device = device
+        self.dtype = torch.float16 if (self.mcfg.get("fp16") and device == "cuda") else torch.float32
+        self.revision = self.mcfg.get("revision")
+        self.processor = processor_class.from_pretrained(self.mcfg["checkpoint"], revision=self.revision)
+        self.model = model_class.from_pretrained(self.mcfg["checkpoint"], revision=self.revision,
+                                                 torch_dtype=self.dtype).to(device).eval()
+        self.sample_rate = self.processor.feature_extractor.sampling_rate
+
+
+class Wav2Vec2Model(PretrainedModel):
     name = "wav2vec2"
 
     def __init__(self, cfg: dict, device: str):
         from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-        self.mcfg = cfg["models"][self.name]
-        self.device = device
-        self.dtype = torch.float16 if (self.mcfg.get("fp16") and device == "cuda") else torch.float32
-        self.revision = self.mcfg.get("revision")  # exact Hugging Face commit (None = latest)
-        self.processor = Wav2Vec2Processor.from_pretrained(self.mcfg["checkpoint"], revision=self.revision)
-        self.model = Wav2Vec2ForCTC.from_pretrained(self.mcfg["checkpoint"], revision=self.revision,
-                                                    torch_dtype=self.dtype).to(device).eval()
-        self.sample_rate = self.processor.feature_extractor.sampling_rate
+        super().__init__(cfg, device, Wav2Vec2Processor, Wav2Vec2ForCTC)
 
     @torch.no_grad()
     def transcribe(self, waves):
@@ -80,20 +84,13 @@ class Wav2Vec2Model(ASRModel):
                 "return_attention_mask": self.processor.feature_extractor.return_attention_mask}
 
 
-class WhisperModel(ASRModel):
+class WhisperModel(PretrainedModel):
     name = "whisper"
 
     def __init__(self, cfg: dict, device: str):
         from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
-        self.mcfg = cfg["models"][self.name]
-        self.device = device
-        self.dtype = torch.float16 if (self.mcfg.get("fp16") and device == "cuda") else torch.float32
-        self.revision = self.mcfg.get("revision")  # exact Hugging Face commit (None = latest)
-        self.processor = WhisperProcessor.from_pretrained(self.mcfg["checkpoint"], revision=self.revision)
-        self.model = WhisperForConditionalGeneration.from_pretrained(
-            self.mcfg["checkpoint"], revision=self.revision, torch_dtype=self.dtype).to(device).eval()
-        self.sample_rate = self.processor.feature_extractor.sampling_rate
+        super().__init__(cfg, device, WhisperProcessor, WhisperForConditionalGeneration)
         self.gen_kwargs = {"language": self.mcfg["language"], "task": self.mcfg["task"],
                            "num_beams": self.mcfg["num_beams"], "max_new_tokens": self.mcfg["max_new_tokens"]}
 

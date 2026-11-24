@@ -62,14 +62,9 @@ def score_predictions(pred: pd.DataFrame, cfg: dict) -> pd.DataFrame:
 
 
 def bootstrap_ci(err: np.ndarray, n: np.ndarray, resamples: int, level: float, seed: int) -> tuple[float, float]:
-    """Confidence interval of an error rate (WER or CER) by bootstrap resampling.
-
-    err[i] = errors in utterance i, n[i] = reference words (or characters) in utterance i.
-    Each resample draws len(err) utterances at random *with replacement* and recomputes the rate.
-    The interval is the middle `level` (e.g. 95 %) of the resampled rates.
-    """
+    """Bootstrap confidence interval of an error rate. err[i] = errors in utterance i, n[i] = its
+    reference words (or characters). Each resample draws the utterances again with replacement."""
     rng = np.random.default_rng(seed)
-    # every row of `picks` is one resample: a list of utterance indices drawn with replacement
     picks = rng.integers(0, len(err), size=(resamples, len(err)))
     rates = []
     for chosen in picks:
@@ -104,11 +99,8 @@ def summarize(scored: pd.DataFrame, keys: list[str], cfg: dict, with_ci: bool = 
 
 
 def add_degradation(table: pd.DataFrame, clean: pd.DataFrame, on: list[str]) -> pd.DataFrame:
-    """Join the clean WER/CER of the *same utterances* (matched on `on`) and compute degradation.
-
-    Relative degradation is undefined when the clean WER is 0: it is set to NaN and flagged in
-    `rel_wer_undefined` instead of producing inf. Absolute degradation is still reported.
-    """
+    """Add the clean WER/CER of the same utterances (matched on `on`) and the degradation.
+    Relative degradation is NaN (flagged in `rel_wer_undefined`) when the clean WER is 0."""
     ref = clean.set_index(on)[["wer", "cer"]].rename(columns={"wer": "wer_clean", "cer": "cer_clean"})
     t = table.join(ref, on=on)
     t["abs_wer_degradation"] = t["wer"] - t["wer_clean"]
@@ -123,11 +115,8 @@ def add_degradation(table: pd.DataFrame, clean: pd.DataFrame, on: list[str]) -> 
 
 
 def clean_by_noise_category(scored: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Clean WER/CER of the utterances that were paired with each noise category.
-
-    Each utterance is mixed with one category, so categories cover different utterances. The
-    per-category degradation must use the clean score of those same utterances, not the overall one.
-    """
+    """Clean WER/CER of the utterances paired with each noise category (each category has its own
+    utterances, so its degradation must use their clean score)."""
     pairing = (scored.loc[scored["condition"] != "clean", ["model", "utt_id", "noise_category"]]
                .drop_duplicates())
     clean_rows = (scored[scored["condition"] == "clean"].drop(columns="noise_category")
@@ -136,10 +125,7 @@ def clean_by_noise_category(scored: pd.DataFrame, cfg: dict) -> pd.DataFrame:
 
 
 def clean_mismatch_candidates(scored: pd.DataFrame, min_cer: float) -> pd.DataFrame:
-    """Clean utterances whose CER is >= min_cer for every model: likely transcript/audio mismatches.
-
-    One model failing is a model error; all models failing on clean audio points at the data.
-    """
+    """Clean utterances with CER >= min_cer for every model: probably a transcript/audio mismatch."""
     clean = scored[scored["condition"] == "clean"].assign(cer=lambda d: d["char_errors"] / d["ref_chars"] * 100)
     table = clean.pivot_table(index="utt_id", columns="model", values="cer")
     flagged = table[(table >= min_cer).all(axis=1)]
@@ -162,9 +148,7 @@ def runtime_table(rtfx: pd.DataFrame, pred_dir, tag: str) -> pd.DataFrame:
     return rtfx.merge(pd.DataFrame(rows), on="model", how="left")
 
 
-# ---------------------------------------------------------------------------------------------------------
-# Plots. Every model keeps one fixed colour and position in every plot, so plots can be compared directly.
-# ---------------------------------------------------------------------------------------------------------
+# Plots: every model keeps the same colour and position in every plot.
 MODEL_LABELS = {"custom_cnn_bilstm_ctc": "CNN-BiLSTM-CTC", "wav2vec2": "Wav2Vec2 XLSR",
                 "whisper": "Whisper Large-v3"}
 MODEL_COLORS = {"custom_cnn_bilstm_ctc": "#2a78d6", "wav2vec2": "#eb6834", "whisper": "#1baf7a"}
@@ -197,7 +181,7 @@ def noise_label(category: str) -> str:
 
 
 def plot_metric_vs_snr(by_cond: pd.DataFrame, order: list[str], metric: str):
-    """One line per model from clean audio to the loudest noise (0 dB); the shaded band is the 95 % CI."""
+    """One line per model from clean to 0 dB; the shaded band is the 95 % CI."""
     x = np.arange(len(order))
     fig, ax = plt.subplots(figsize=(8, 4.8))
     for m in model_order(by_cond["model"].unique()):
@@ -207,7 +191,6 @@ def plot_metric_vs_snr(by_cond: pd.DataFrame, order: list[str], metric: str):
                             linewidth=0)
         ax.plot(x, g[metric], color=model_color(m), linewidth=2, marker="o", markersize=7,
                 markeredgecolor="white", markeredgewidth=1.5, label=model_label(m))
-        # model name and last value at the end of the line, so the plot can be read without the legend
         ax.annotate(f"{model_label(m)}  {g[metric].iloc[-1]:.1f}", (x[-1], g[metric].iloc[-1]), xytext=(10, 0),
                     textcoords="offset points", va="center", color=TEXT)
     ax.set_xticks(x, [CONDITION_LABELS.get(c, c) for c in order])
@@ -274,8 +257,7 @@ def plot_noise_heatmap(by_cat: pd.DataFrame, order: list[str]):
 
 
 def plot_accuracy_vs_speed(trade_off: pd.DataFrame):
-    """Speed (RTFx) against WER on clean audio (circle) and at 0 dB (square). The line between the two
-    points shows how much accuracy the model loses in the loudest noise."""
+    """RTFx against WER on clean audio (circle) and at 0 dB (square)."""
     t = trade_off.set_index("model")
     fig, ax = plt.subplots(figsize=(8, 4.8))
     for m in model_order(t.index):
@@ -333,7 +315,7 @@ def accuracy_vs_speed(by_cond: pd.DataFrame, rtfx: pd.DataFrame) -> pd.DataFrame
 
 
 def check_references(pred: pd.DataFrame, conditions: pd.DataFrame | None) -> None:
-    """Every model is scored against the same, unchanged reference transcript (plan section 11.6)."""
+    """Every model must be scored against the same, unchanged reference (plan 11.6)."""
     per_utt = pred.groupby("utt_id")["reference"].nunique()
     if (per_utt > 1).any():
         raise ValueError(f"Models disagree on the reference of {list(per_utt[per_utt > 1].index[:5])}")
@@ -360,7 +342,7 @@ def evaluate(cfg: dict, tag: str, models: list[str] | None = None) -> None:
     cond_path = manifest_path(cfg, f"conditions_{tag}.csv")
     check_references(pred, pd.read_csv(cond_path, keep_default_na=False) if cond_path.exists() else None)
 
-    # Fair comparison: keep only utterance/condition pairs present for every model.
+    # keep only rows that every model has
     key = ["utt_id", "condition", "realization"]
     common = pred.groupby(key)["model"].nunique()
     common = common[common == pred["model"].nunique()].index

@@ -1,6 +1,4 @@
-# Experiment configuration for the Indonesian ASR noise-robustness study.
-# All paths are relative to the repository root.
-# Freeze this file (and commit it) before running the full evaluation.
+# Experiment settings. Paths are relative to the repository root.
 
 project:
   name: indonesian-asr-noise-robustness
@@ -21,10 +19,7 @@ paths:
 datasets:
   speech:
     hf_repo_id: Atika88/Indonesian-ASR-11-Class-Dataset
-    # "main" is the latest revision. The DOI-registered revision is
-    # c65fe8bcff0547214c34cfbea248b4045a0d867c (may use "dev" instead of "val").
-    # The resolved commit hash is written to data/raw/indonesia_asr/DOWNLOAD_INFO.json.
-    revision: main
+    revision: main               # the commit actually used is saved in DOWNLOAD_INFO.json
   noise:
     git_url: https://github.com/microsoft/MS-SNSD.git
     pools: [noise_train, noise_test]
@@ -34,26 +29,15 @@ audio:
   convert_to_mono: true          # all models expect mono input
 
 speech_audit:
-  # Set after inspecting the full corpus (2026-11-17): duration median 4.5 s, 99.9% 11.3 s,
-  # min 1.56 s, max 206 s. Files outside these bounds go to review, never auto-reject.
+  # outside these bounds -> review (corpus: median 4.5 s, 99.9 % below 11.3 s, max 206 s)
   min_duration_sec: 1.5
   max_duration_sec: 15.0
-  # Speaking rate = transcript characters / duration. Median 13.5 chars/s, 0.1% 6.2, 99.9% 23.1.
-  # Very slow rates (e.g. a 9-word prompt lasting 206 s) suggest long silence or an
-  # audio/transcript mismatch; very fast rates suggest truncated audio.
-  min_chars_per_sec: 5.0
+  min_chars_per_sec: 5.0         # speaking rate = transcript characters / duration
   max_chars_per_sec: 30.0
-  # Rule-based resolution of "review" files (replaces per-file listening for these flags).
-  # Manual decisions in manual_review_decisions.csv still override these rules.
-  auto_review:
+  auto_review:                   # rules that decide "review" files instead of listening to each one
     enabled: true
-    # Clipping was found mild and concentrated in a few loud recording sessions
-    # (median 0.25% clipped samples). Below this fraction the file is accepted.
-    max_clipped_fraction: 0.01
-    # Duration / speaking-rate flags: speaking rate is recomputed over the active-speech span
-    # (first to last frame within active_threshold_db of the loudest frame), so leading and
-    # trailing silence no longer counts. Outside this range -> invalid
-    # (too slow: extra or wrong content; too fast: truncated audio).
+    max_clipped_fraction: 0.01   # less clipping than this -> accepted
+    # speaking rate over the active-speech span only (silence removed); outside the range -> invalid
     active_threshold_db: 30.0
     min_active_chars_per_sec: 3.0
     max_active_chars_per_sec: 30.0
@@ -65,22 +49,15 @@ speech_audit:
   num_workers: 4
 
 noise_audit:
-  # Categories whose recordings contain speech/babble: excluded from the primary experiment.
-  speech_like_categories: [Babble, NeighborSpeaking, AirportAnnouncements]
-  # Categories that may contain background talk: require manual listening before use.
-  review_categories: [Cafe, CafeTeria, Restaurant, Station, Metro, Square, Office, Hallway]
+  speech_like_categories: [Babble, NeighborSpeaking, AirportAnnouncements]   # contain speech -> excluded
+  review_categories: [Cafe, CafeTeria, Restaurant, Station, Metro, Square, Office, Hallway]  # may contain talk
   include_music: false
-  # Speech screening (python -m src.audio_validation --target noise-speech): a valid noise file whose
-  # Wav2Vec2 transcript reaches this many characters per second is reported in noise_speech_check.csv.
-  # Flagged evaluation (noise_test) files are excluded through manual_review_decisions.csv.
-  # Wav2Vec2 also outputs letters for pure noise, so the threshold was calibrated on the 57 MS-SNSD files
-  # that certainly contain speech (Babble, NeighborSpeaking, AirportAnnouncements): at 4 chars/s it
-  # catches 91 % of them and flags 13 of 122 other noise files (2 of the 31 evaluation files).
+  # speech check: Wav2Vec2 letters per second at or above this -> listed in noise_speech_check.csv
+  # (catches 91 % of the 57 speech files, flags 2 of the 31 evaluation files)
   speech_check_chars_per_sec: 4.0
-  # Normalise inconsistent MS-SNSD filename prefixes.
-  category_aliases:
+  category_aliases:              # MS-SNSD file names use different prefixes for the same category
     AirportAnnouncement: AirportAnnouncements
-    Neighbor: NeighborSpeaking   # noise_test uses "Neighbor_*.wav" for the same speech-like category
+    Neighbor: NeighborSpeaking
   silence_rms_dbfs: -60.0
   num_workers: 4
 
@@ -95,17 +72,15 @@ text_normalization:
 mixing:
   snr_db: [20, 10, 5, 0]
   eval_noise_pool: noise_test    # noise files used for evaluation
-  augmentation_noise_pool: noise_train  # reserved for the optional secondary experiment
+  augmentation_noise_pool: noise_train
   power_method: active_speech    # active_speech | full
   active_frame_ms: 25
   active_hop_ms: 10
   active_threshold_db: 40.0      # frames within this many dB of the loudest frame count as active
   noise_assignment: round_robin_category  # balance noise categories across utterances
   realizations_per_utterance: 1
-  on_clipping: scale_both        # scale_both (keeps SNR, records gain) | flag
-  # utterance: one gain for all conditions of an utterance (clean included), taken from its
-  # loudest mixture, so the speech level is identical across conditions | condition: per mixture
-  gain_scope: utterance
+  on_clipping: scale_both        # scale_both (lower the volume, SNR unchanged) | flag
+  gain_scope: utterance          # one gain for all conditions of an utterance | condition
   clip_peak: 0.999
   snr_tolerance_db: 0.1          # achieved SNR must be within this of the target
 
@@ -144,8 +119,7 @@ models:
     checkpoint: output/models/custom_cnn_bilstm_ctc/best.pt
     batch_size: 16               # inference batch size
 
-  # revision = exact Hugging Face commit of the checkpoint (plan 7.2/7.3: verify the exact checkpoint).
-  # Pinned so that the full run uses the same model version as the pilot even if the repository changes.
+  # revision = exact Hugging Face commit, so every run uses the same model version
   wav2vec2:
     checkpoint: indonesian-nlp/wav2vec2-large-xlsr-indonesian
     revision: 68fbcbd947e32184a704b401b71973d6c27de0c1
@@ -159,13 +133,8 @@ models:
     task: transcribe
     num_beams: 1
     max_new_tokens: 225
-    # 1 on the 4 GB RTX 3050: batch 1 peaks at 3.36 GB and fits in VRAM; batch 4 needs 4.14 GB,
-    # spills into shared system memory and runs ~2-3x slower. Batch size does not change the output.
-    batch_size: 1
+    batch_size: 1                # fits a 4 GB GPU; 16 on the Kaggle T4 (same output)
     fp16: true                   # only applied on CUDA
-    # Plan v5 section 7.3: if the hardware cannot run Large-v3, set checkpoint to
-    # openai/whisper-large-v3-turbo (same settings, with that repository's own revision) and record the change in
-    # report/whisper_model_selection.md and the README.
 
 inference:
   warmup_batches: 1              # excluded from timing
@@ -174,6 +143,4 @@ inference:
 evaluation:
   bootstrap_resamples: 1000
   confidence_level: 0.95
-  # Clean utterances with CER at or above this (%) for every model are listed as possible
-  # transcript/audio mismatches in clean_mismatch_candidates.csv (reported, not excluded).
-  mismatch_clean_cer: 30.0
+  mismatch_clean_cer: 30.0       # clean CER at least this for every model -> clean_mismatch_candidates.csv

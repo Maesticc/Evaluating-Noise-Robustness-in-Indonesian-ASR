@@ -1,27 +1,13 @@
-"""Controlled audio standardization and deterministic transcript normalization.
-
-The original transcript is never modified in the manifests. `normalize_text` is applied to
-both the reference and the hypothesis only when metrics are computed.
-"""
+"""Text normalization for WER/CER, applied to references and hypotheses only when scoring.
+The transcripts in the manifests are never changed."""
 
 from __future__ import annotations
 
 import re
 import unicodedata
-from pathlib import Path
 
 import numpy as np
 
-from src.data_loader import load_audio
-
-# --------------------------------------------------------------------------- audio
-def standardize_audio(path: str | Path, target_sr: int, mono: bool = True) -> tuple[np.ndarray, int]:
-    """Load, convert to mono only if needed, resample once if needed. No amplitude normalization:
-    peak/RMS normalization before mixing would change the intended speech/noise relationship."""
-    return load_audio(path, target_sr=target_sr, mono=mono)
-
-
-# --------------------------------------------------------------------------- numbers
 _UNITS = ["nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan",
           "sepuluh", "sebelas"]
 _SCALES = [(10**12, "triliun"), (10**9, "miliar"), (10**6, "juta"), (1000, "ribu")]
@@ -62,19 +48,14 @@ def _expand_number(match: re.Match) -> str:
     return number_to_words(int(token))
 
 
-# --------------------------------------------------------------------------- text
 _PUNCT_RE = re.compile(r"[^\w\s]", flags=re.UNICODE)
 _SPACE_RE = re.compile(r"\s+")
 _NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*")
 
 
 def normalize_text(text: str, cfg: dict | None = None) -> str:
-    """Deterministic normalization for WER/CER. No stemming or lemmatization.
-
-    Policy (configurable under `text_normalization` in config.yaml):
-      Unicode NFKC -> lowercase -> '%' to 'persen' -> digits to Indonesian words ->
-      hyphens to spaces -> strip accents -> remove punctuation -> collapse whitespace.
-    """
+    """NFKC -> lowercase -> '%' to 'persen' -> digits to words -> hyphens to spaces -> strip accents
+    -> remove punctuation -> collapse spaces. Each step can be switched off in config.yaml."""
     opts = {"lowercase": True, "strip_accents": True, "hyphen_to_space": True,
             "remove_punctuation": True, "numbers_to_words": True, "percent_to_word": True}
     if cfg:
@@ -98,9 +79,3 @@ def normalize_text(text: str, cfg: dict | None = None) -> str:
         t = t.replace("'", "")  # e.g. "jum'at" -> "jumat"
         t = _PUNCT_RE.sub(" ", t).replace("_", " ")
     return _SPACE_RE.sub(" ", t).strip()
-
-
-if __name__ == "__main__":
-    for s in ["Palembang pernah menjadi tuan rumah Asian Games 2018 bersama Jakarta",
-              "Harga naik 12,5% dari Rp 1.500.000!", "Anak-anak bermain di taman."]:
-        print(f"{s!r} -> {normalize_text(s)!r}")
