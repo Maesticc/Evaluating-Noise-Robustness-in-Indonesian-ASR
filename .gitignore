@@ -1,8 +1,6 @@
 # Raw datasets, generated audio and caches (see README.md for download steps)
 data/raw/*
-!data/raw/.gitkeep
 data/processed/pilot_cache/*
-!data/processed/pilot_cache/.gitkeep
 *.wav
 *.flac
 *.mp3
@@ -15,7 +13,6 @@ data/processed/manifests/conditions_test.csv
 
 # Model checkpoints and HF caches
 output/models/*
-!output/models/.gitkeep
 *.pt
 *.pth
 *.bin
@@ -26,7 +23,6 @@ hf_cache/
 # Large outputs
 output/predictions/**/scored_utterances.csv
 output/logs/*
-!output/logs/.gitkeep
 
 # Python
 __pycache__/
