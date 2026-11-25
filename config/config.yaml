@@ -1,7 +1,6 @@
 # Experiment settings. Paths are relative to the repository root.
 
 project:
-  name: indonesian-asr-noise-robustness
   seed: 42
 
 paths:
@@ -11,7 +10,6 @@ paths:
   noise_root: data/raw/ms_snsd                 # sparse clone of microsoft/MS-SNSD
   manifests_dir: data/processed/manifests
   pilot_cache_dir: data/processed/pilot_cache
-  models_dir: output/models
   logs_dir: output/logs
   predictions_dir: output/predictions
   plots_dir: output/plots
@@ -26,7 +24,6 @@ datasets:
 
 audio:
   target_sample_rate: 16000
-  convert_to_mono: true          # all models expect mono input
 
 speech_audit:
   # outside these bounds -> review (corpus: median 4.5 s, 99.9 % below 11.3 s, max 206 s)
@@ -85,7 +82,6 @@ mixing:
   snr_tolerance_db: 0.1          # achieved SNR must be within this of the target
 
 pilot:
-  split: test
   n_utterances: 30
 
 models:
