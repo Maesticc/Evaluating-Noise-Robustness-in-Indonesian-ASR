@@ -1,0 +1,28 @@
+{
+  "code_commit": "ce13344706adeb57410848e8e6c3661c10a80c1f",
+  "models_done": [
+    "custom_cnn_bilstm_ctc",
+    "wav2vec2",
+    "whisper"
+  ],
+  "pilot_check": {
+    "pairing_same": true,
+    "custom_cnn_bilstm_ctc": {
+      "identical": 150,
+      "rows": 150,
+      "rtfx_t4": 1310.17
+    },
+    "wav2vec2": {
+      "identical": 147,
+      "rows": 150,
+      "rtfx_t4": 80.72
+    },
+    "whisper": {
+      "identical": 150,
+      "rows": 150,
+      "rtfx_t4": 19.17
+    }
+  },
+  "session_hours": 7.28,
+  "full_test": "FINISHED"
+}

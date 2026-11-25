@@ -1,0 +1,56 @@
+{
+  "model": {
+    "name": "custom_cnn_bilstm_ctc",
+    "checkpoint": "C:\\Documents\\SEMS5\\AOL_DL\\output\\models\\custom_cnn_bilstm_ctc\\best.pt",
+    "decoding": "ctc_greedy",
+    "features": {
+      "sample_rate": 16000,
+      "n_fft": 400,
+      "win_length": 400,
+      "hop_length": 160,
+      "n_mels": 80,
+      "log_offset": 1e-06,
+      "per_utterance_norm": true
+    },
+    "architecture": {
+      "cnn_channels": [
+        32,
+        32
+      ],
+      "lstm_hidden": 256,
+      "lstm_layers": 3,
+      "dropout": 0.2
+    }
+  },
+  "tag": "test_pilot",
+  "device": "cuda",
+  "batch_size": 16,
+  "n_rows": 150,
+  "n_failed": 0,
+  "rows_from_earlier_sessions": 0,
+  "warmup_batches": 1,
+  "model_load_sec": 0.32,
+  "timing_method": "time.perf_counter around model.transcribe with CUDA synchronize; waveform generation and warm-up excluded",
+  "peak_gpu_memory_gb": 0.182,
+  "environment": {
+    "python": "3.12.16",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+    "git_commit": "6f22cc7ea763270d2b00ddcb240685a0048745a3",
+    "git_code_changed": false,
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "torch": "2.11.0+cu126",
+    "torchaudio": "2.11.0+cu126",
+    "transformers": "5.23.0",
+    "jiwer": "4.0.0",
+    "librosa": "1.0.1",
+    "soundfile": "0.14.0",
+    "cuda_available": true,
+    "cuda_version": "12.6",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU",
+    "gpu_memory_gb": 4.29
+  },
+  "errors": [],
+  "config_path": "C:\\Documents\\SEMS5\\AOL_DL\\config\\config.yaml"
+}

@@ -1,9 +1,9 @@
-"""Custom CNN-BiLSTM-CTC acoustic model, trained from scratch on the official training split.
+"""CNN-BiLSTM-CTC model, trained from scratch.
 
-Input:  log-Mel filterbank features (80 bins, 25 ms window, 10 ms hop; frozen in config.yaml)
-CNN:    2-D convolutions extract local time-frequency patterns (time downsampled x2)
-BiLSTM: models temporal context in both directions
-CTC:    character-level output with a blank token, greedy decoding
+Input:  log-Mel features (80 bins, 25 ms window, 10 ms hop)
+CNN:    local time-frequency patterns (time downsampled x2)
+BiLSTM: context in both directions
+CTC:    one character per frame plus a blank, greedy decoding
 """
 
 from __future__ import annotations
@@ -24,10 +24,7 @@ class CharVocab:
 
     @classmethod
     def from_texts(cls, texts) -> "CharVocab":
-        chars = set()
-        for t in texts:
-            chars.update(t)
-        return cls(sorted(chars))
+        return cls([c for t in texts for c in t])
 
     def encode(self, text: str) -> list[int]:
         return [self.stoi[c] for c in text if c in self.stoi]
@@ -63,12 +60,15 @@ class LogMelFeatures(nn.Module):
             feats = torch.log(self.mel(wave.float()) + self.log_offset)
         frame_lengths = lengths // self.hop_length + 1
         if self.per_utterance_norm:
-            mask = (torch.arange(feats.size(-1), device=feats.device)[None, :] < frame_lengths[:, None])
-            mask = mask[:, None, :].float()
-            n = mask.sum(dim=-1, keepdim=True).clamp(min=1)
-            mean = (feats * mask).sum(dim=-1, keepdim=True) / n
-            var = (((feats - mean) * mask) ** 2).sum(dim=-1, keepdim=True) / n
-            feats = (feats - mean) / torch.sqrt(var + 1e-5) * mask
+            # per utterance, every Mel bin to mean 0 and variance 1 (padding frames ignored, stay 0)
+            normalized = torch.zeros_like(feats)
+            for i in range(feats.size(0)):
+                n_frames = int(frame_lengths[i])
+                real = feats[i, :, :n_frames]                      # (n_mels, n_frames)
+                mean = real.mean(dim=-1, keepdim=True)
+                var = ((real - mean) ** 2).mean(dim=-1, keepdim=True)
+                normalized[i, :, :n_frames] = (real - mean) / torch.sqrt(var + 1e-5)
+            feats = normalized
         return feats, frame_lengths
 
 

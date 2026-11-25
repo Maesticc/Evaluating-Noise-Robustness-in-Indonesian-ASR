@@ -9,6 +9,7 @@
     "percent_to_word": true
   },
   "run_metadata": {
+    "custom_cnn_bilstm_ctc": "C:\\Documents\\SEMS5\\AOL_DL\\output\\predictions\\run_test_pilot_custom_cnn_bilstm_ctc.json",
     "wav2vec2": "C:\\Documents\\SEMS5\\AOL_DL\\output\\predictions\\run_test_pilot_wav2vec2.json",
     "whisper": "C:\\Documents\\SEMS5\\AOL_DL\\output\\predictions\\run_test_pilot_whisper.json"
   },

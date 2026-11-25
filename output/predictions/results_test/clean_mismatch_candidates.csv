@@ -1,0 +1,7 @@
+utt_id,clean_cer_custom_cnn_bilstm_ctc,clean_cer_wav2vec2,clean_cer_whisper,reference
+Clarification_M8_M8_Clarification_take25_04,67.27272727272727,70.9090909090909,65.45454545454545,"Jika saya memberikan perintah ini, apa yang akan terjadi?"
+Confirmation_M8_M8_Confirmation_take02_02,60.86956521739131,56.52173913043478,55.072463768115945,Tolong pastikan apakah instruksi yang saya berikan sudah dilaksanakan
+Confirmation_M8_M8_Confirmation_take24_01,153.48837209302326,165.11627906976744,155.8139534883721,Apakah data yang saya unggah sudah diterima?
+Confirmation_M8_M8_Confirmation_take24_08,33.33333333333333,38.095238095238095,33.33333333333333,"Apakah kamu sudah memeriksa apakah semua dokumen yang diperlukan sudah saya serahkan?"""
+Declarative_M8_M8_Declarative_take02_03,92.98245614035088,126.3157894736842,121.05263157894737,Dosen pembimbing memberikan banyak masukan yang membangun.
+Scheduling_M8_M8_Scheduling_take25_05,39.130434782608695,32.608695652173914,30.434782608695656,Jadwalkan servis kendaraan keluarga minggu ini

@@ -1,0 +1,113 @@
+noise_id,noise_pool,noise_category,noise_path,transcribed_chars,chars_per_sec,speech_suspected,transcript
+noise_train/AirConditioner_1,noise_train,AirConditioner,noise_train/AirConditioner_1.wav,0,0.0,False,
+noise_train/AirConditioner_10,noise_train,AirConditioner,noise_train/AirConditioner_10.wav,14,0.189,False,i iiiiiiii ii iii
+noise_train/AirConditioner_3,noise_train,AirConditioner,noise_train/AirConditioner_3.wav,0,0.0,False,
+noise_train/AirConditioner_4,noise_train,AirConditioner,noise_train/AirConditioner_4.wav,0,0.0,False,
+noise_train/AirConditioner_5,noise_train,AirConditioner,noise_train/AirConditioner_5.wav,2,0.068,False,di
+noise_train/AirConditioner_6,noise_train,AirConditioner,noise_train/AirConditioner_6.wav,0,0.0,False,
+noise_train/AirConditioner_7,noise_train,AirConditioner,noise_train/AirConditioner_7.wav,0,0.0,False,
+noise_train/AirConditioner_8,noise_train,AirConditioner,noise_train/AirConditioner_8.wav,0,0.0,False,
+noise_train/AirConditioner_9,noise_train,AirConditioner,noise_train/AirConditioner_9.wav,359,2.989,False,idddiidiidiididiiiddidiididiiiiddidididiiiddiidd diiiidddiiddidiiiddididdiiidididdidddididdidddidiidiiddidiiiddddididdididdi diddiiddddiiiidddiiidddiidiiiidiiiiddiddiddiiddidid dididiididdiididiiiididddiddididiiiidiiddididiiddidididdi iiiidddddiiididdiiididdidiiiidididiiiiiiiiddddiiddiddidi dddiidddiiddddidididddddiidiiididddidiiidiididdididddidiiiddiddiiiidiiii
+noise_train/Bus_1,noise_train,Bus,noise_train/Bus_1.wav,360,1.2,False,mupaiiilai aiiimamnulismaganan belaka tu iiiiiiii iaiaiiiaiauuu aaaaai au iiainaatu misidiiaiaiaaaidiaiidaaaaaaa didaiaaliiiidu aiaiiiamiaiidiidaiaaidialaidiiiaaiiaaaiiadaida aanalai melara keaiimulan atu aaaiaiaaaaaaaaaaaaaaaiaaaaaiaaaia a aiiai mebikulaaiiiiaaidaaaautidatisiiataita kita idaadaiiadmaaa bea iialiidiiiiiidiiiidamiidiiiiya laa suanmaaiaai anaaaala aaalaiiiimla amlaiimiaa
+noise_train/Car_1,noise_train,Car,noise_train/Car_1.wav,0,0.0,False,
+noise_train/CopyMachine_1,noise_train,CopyMachine,noise_train/CopyMachine_1.wav,57,1.824,False,iiiiddidiidddiidididddididdiidiiiiidiididiiddididdid diiii
+noise_train/CopyMachine_10,noise_train,CopyMachine,noise_train/CopyMachine_10.wav,600,2.104,False,aadida aaiiaddaidiaaidaiddddiaiapa diiidiiaiiiiiiddiidiiiiii diiiiiiiiiiiddiidiiiiiiidiiii aiida dan ddiiidada da daadiiddadi iiaddaiddaaddida diiaddiddidddddia d daddda diidaaiiadid iiiiadidadia dadadadaaaadddddaidadaddaaadiaiaadidaadadaddiii susisiisiiiiisisisisisispaa kia ia kia adakita da ida da t ta dadidiiaidda iddaia daidaaid daidaia didiidii ddiddidi idddi iiididididdiid didiiddidddiididididiidididd idandid idididaaiiidi diddidididadaaaidata taa aanatan a kpaasn talakas aiiididindiin iind dn didiidin did dididindna ididididddiddididiidiiddiddiidddiddiiddiddiiiddididddiidiiiididiididiiidididdi ddidadaddiaiiaiiaidaddiidiiddadiidaddii tet
+noise_train/CopyMachine_2,noise_train,CopyMachine,noise_train/CopyMachine_2.wav,61,2.505,False,adiiaadadidiiaaiidaaiiiiildiiaaaaddidadadiddiiitad aiadaiddica
+noise_train/CopyMachine_3,noise_train,CopyMachine,noise_train/CopyMachine_3.wav,0,0.0,False,
+noise_train/CopyMachine_4,noise_train,CopyMachine,noise_train/CopyMachine_4.wav,88,3.247,False,iiidddididididiididdidiididididdddiiididddiiiddidiiiddidiidididiiddiiiidiid iiiidiiiiiiii
+noise_train/CopyMachine_5,noise_train,CopyMachine,noise_train/CopyMachine_5.wav,7,0.321,False,diaiiii
+noise_train/CopyMachine_6,noise_train,CopyMachine,noise_train/CopyMachine_6.wav,8,0.254,False,aaama uad
+noise_train/CopyMachine_7,noise_train,CopyMachine,noise_train/CopyMachine_7.wav,8,0.174,False,da ikdata
+noise_train/CopyMachine_8,noise_train,CopyMachine,noise_train/CopyMachine_8.wav,599,2.1,False,aadida aaiiaddaidiaaidaiddddiaiapa diiidiiaiiiiiiddiidiiiiii diiiiiiiiiiiddiidiiiiiiidiiii aiida dan ddiiidada da daadiiddadi iiaddaidaaddida diiaddiddidddddia d daddda diidaaiiadid iiiiadidadia dadadadaaaadddddaidadaddaaadiaiaadidaadadaddiii sasisiisiiiiisisisisisispa kia ia kia adakita da ida da t ta dadidiiaidda iddaia daidaaid daidaia didiidii ddiddidi idddi iiididididdiid didiiddidddiididididiidididd idandid idididaaiiidi diddidididadaaaidata taa aaatan a kpaasn talakass aiiididindiin iind dn didiidin did dididindna ididididddiddididiidiiddiddiidddiddiidididdiiiddididddiidiiiididiididiiidididdi ddidadaddiaiiaiiaidaddiidiiddadiidaddii tet
+noise_train/Field_1,noise_train,Field,noise_train/Field_1.wav,0,0.0,False,
+noise_train/Kitchen_1,noise_train,Kitchen,noise_train/Kitchen_1.wav,17,0.057,False,a    aakaaamamamaaaia
+noise_train/LivingRoom_1,noise_train,LivingRoom,noise_train/LivingRoom_1.wav,408,1.36,False,aaatitiauaaiiaatiii adiaaiyamimamaidinididaidididadiiasu yaiaakadaiimmiiiiiddi iaaidididididiiii iugukai tddikeuaisaaidakaharin tindiddi luar tahu pultiaauansaaandisaadaaamamaua naaaananlami bisaadadisuupak imidlilibuaaauuaaa aaadaaiiiddidiidadadin miaiiiiiiimimadmaiididdidmi aaaapadii amu sudamamaaaamadaa siappamiadadipelidiuauidaamaaa diaama aaaauumumyahamamaammuumam  aaaaiiiiiidididiiidi itla medamdipagintipaiibikan ak kamdimaa
+noise_train/Munching_1,noise_train,Munching,noise_train/Munching_1.wav,82,2.428,False,ia a ya ya ya ya aaa a aaa ya ya ya ya ian an iia iga ia da iilan ila a a a la n lan i ila y kan ilag iilagmin kila
+noise_train/Munching_10,noise_train,Munching,noise_train/Munching_10.wav,116,4.015,True,kahat at keat at kat a kati kat kat atmin nkaatt keka kat kekat at ati ka maat atminaa a kkat at kkat matat minin a at at kekat at ekat at aikat maat
+noise_train/Munching_2,noise_train,Munching,noise_train/Munching_2.wav,34,1.205,False,mu mailuf poteito sum me mailuk poteito m
+noise_train/Munching_3,noise_train,Munching,noise_train/Munching_3.wav,211,3.833,False,ehaaaaiaya ke kekkaa iaaakkakammaa aaaaaaaian aaaaaaaa iari kaaaata dari tala ta paa ta takkkakkakaku  aya aayaa ttaka kaka a d ta tapanep kan anaaaa ataata lilalaa tdak kaaakaappaini  kakaakak aa apa aakka aaka akak apppatapaaiiidak akal ma enluakal
+noise_train/Munching_4,noise_train,Munching,noise_train/Munching_4.wav,21,1.049,False,aa daaidaad aa adaaida aa
+noise_train/Munching_6,noise_train,Munching,noise_train/Munching_6.wav,60,2.074,False,indaitu aiutua apautean kuapa an uuinni aa ituai da ea kaana pelan aakaa
+noise_train/Munching_7,noise_train,Munching,noise_train/Munching_7.wav,48,1.2,False,aaidia at at t  aaaaidia at at t aaidia at at t  aaaaidia at at t
+noise_train/Munching_8,noise_train,Munching,noise_train/Munching_8.wav,162,4.37,True,sska tokaarauai ddada dga da amjlan dia dia dia dia dia sseua oaaruai daii ia dia mamia dia ia dia dia dia ska saya daii ia dia amnesan lia dia dia dia dia a auaa ddaaa dga da kamajsan dia dlia dia dia dia
+noise_train/Munching_9,noise_train,Munching,noise_train/Munching_9.wav,103,1.837,False,akaaliakak i daadiadaakaan kaka degan eaa kku ii di d na daa aa a tidaaak ii di i iadai  ka di rgi i i d di riikkku dii diiir diad d i i
+noise_train/Park_1,noise_train,Park,noise_train/Park_1.wav,202,0.673,False,kaaaadaa kaaaiaaaiaaaiaii d ayuiiiaimiabaidi di dunggigi gimua kpapaakaalatida lelalhkagiikitau a iiaiiaaiimiaa aaaakkatakatet taaaa a a na iia mua aaaaaaaaaaaamiaaaaaaaaa a iaai iiiiiiiiiiiiiii iiiiiiiimilana duna yaamiaayana
+noise_train/ShuttingDoor_1,noise_train,ShuttingDoor,noise_train/ShuttingDoor_1.wav,42,1.672,False,adang adang adang adang adang adang kecang kecang
+noise_train/ShuttingDoor_10,noise_train,ShuttingDoor,noise_train/ShuttingDoor_10.wav,18,0.535,False,dodokkdodok kdoedok
+noise_train/ShuttingDoor_2,noise_train,ShuttingDoor,noise_train/ShuttingDoor_2.wav,176,5.838,True,aankan aakan mankan mankan mankan mankan mainkan maina maankan maikan maakan mainkan mankan mankan mainkan manka aina maankn ainkan inkan mainkan ka maka maankan maaka maaa aaa mankn mankn aankan makn mankan
+noise_train/ShuttingDoor_3,noise_train,ShuttingDoor,noise_train/ShuttingDoor_3.wav,21,0.948,False,anyamanyamanyamanya ne
+noise_train/ShuttingDoor_4,noise_train,ShuttingDoor,noise_train/ShuttingDoor_4.wav,19,0.515,False,eeeekeeeeke eekeeeee
+noise_train/ShuttingDoor_5,noise_train,ShuttingDoor,noise_train/ShuttingDoor_5.wav,2,0.091,False,a  a
+noise_train/ShuttingDoor_6,noise_train,ShuttingDoor,noise_train/ShuttingDoor_6.wav,146,4.945,True,dimlilint i illilntat iilililntat imi lllinta lllinta di illntat iiiilintat diililina dilililinta idi llilintat  iilntat lililint dillnta  ilulntat dilillinta dilintat
+noise_train/ShuttingDoor_7,noise_train,ShuttingDoor,noise_train/ShuttingDoor_7.wav,4,0.104,False,ee ee
+noise_train/ShuttingDoor_8,noise_train,ShuttingDoor,noise_train/ShuttingDoor_8.wav,21,0.673,False,ui adui addli tekekali ka
+noise_train/ShuttingDoor_9,noise_train,ShuttingDoor,noise_train/ShuttingDoor_9.wav,49,2.295,False,te t tea ea t tea e t e e tea e t tea ea t tema e t e e tea e  tea ea t tema
+noise_train/SqueakyChair_1,noise_train,SqueakyChair,noise_train/SqueakyChair_1.wav,175,5.554,True,ataprian ada ketkitaan dnin ua aha daa aat dahan daan tauran ada ekitaan digin ula daha dahat dahat dahan daha ataurian ada ekkitaan digan daha daat daat dan aan treat tada kdaan dingan ega daan daat daa daan daan
+noise_train/SqueakyChair_10,noise_train,SqueakyChair,noise_train/SqueakyChair_10.wav,75,3.113,False,tra e ta teh ta teh n tehtera te ta te a tehtan te tera te tta te ta teh tan e tera tedak teh ta teh t
+noise_train/SqueakyChair_11,noise_train,SqueakyChair,noise_train/SqueakyChair_11.wav,19,0.553,False,k  ka k  ka k  a ka a a k  ka k k ka
+noise_train/SqueakyChair_2,noise_train,SqueakyChair,noise_train/SqueakyChair_2.wav,115,3.459,False,taa tka t daa tkda ak  kda ak dda ekd ak a eka a ad te tak a tekaa tak daa tekaa tk ad ekdaatakda tkaa tkaa tdaa tka k a tkdaa ek dad ed ek ma eda a ad erda
+noise_train/SqueakyChair_4,noise_train,SqueakyChair,noise_train/SqueakyChair_4.wav,11,0.326,False,a ay di iiyaii
+noise_train/SqueakyChair_5,noise_train,SqueakyChair,noise_train/SqueakyChair_5.wav,18,0.822,False,teeetadtetetdee abe
+noise_train/SqueakyChair_6,noise_train,SqueakyChair,noise_train/SqueakyChair_6.wav,59,1.961,False,tu lakan kan tedika ala ek kaaia kaalan kakatk tida keti inu duii a telan
+noise_train/SqueakyChair_7,noise_train,SqueakyChair,noise_train/SqueakyChair_7.wav,47,1.987,False,ya ta ta da da tatata a a aadaa takkaada akaa a aaa desa adar
+noise_train/SqueakyChair_8,noise_train,SqueakyChair,noise_train/SqueakyChair_8.wav,34,0.991,False,daya ena diaka tak dela nai denadaa kekat
+noise_train/SqueakyChair_9,noise_train,SqueakyChair,noise_train/SqueakyChair_9.wav,8,0.301,False,a a a  a a  a a a
+noise_train/Traffic_1,noise_train,Traffic,noise_train/Traffic_1.wav,11,0.037,False,aaetde  iii          ii
+noise_train/Typing_1,noise_train,Typing,noise_train/Typing_1.wav,0,0.0,False,
+noise_train/Typing_10,noise_train,Typing,noise_train/Typing_10.wav,0,0.0,False,
+noise_train/Typing_2,noise_train,Typing,noise_train/Typing_2.wav,227,6.008,True,iidaddiiddidddiiidddaiiid i idaddi iddddiddi i i dai iad d di diiid dddiii dd ididdddiddi di diddiai idad idididi iidddddaiiai diiidaii iidnidadiiiid ddd iiididiiddiddii ii dd ididdiddiiii ddidi d diidadiiidididin idididi ddiiiiddddddii iiiaidiiiidiidii diadi
+noise_train/Typing_3,noise_train,Typing,noise_train/Typing_3.wav,176,4.089,True,daaadaadlaadaaaadiidaaaaaddaaaadaaaddidaadataiaddaaadaididaadaidadaiddiiiidiiiiddidnand i idndadan ididiidnilulududa da kaaiiiadadiiaaddakkaka dadiaaadaadadiditia aaaaaidiiita ikan diin
+noise_train/Typing_4,noise_train,Typing,noise_train/Typing_4.wav,80,2.938,False,ddadadadadaaadiddtddadadtdadatdaaatadatdaadadadiadaaidaddaiaada idaadddaaaddaadaa
+noise_train/Typing_5,noise_train,Typing,noise_train/Typing_5.wav,163,4.829,True,ddi  da tiddaatikpa k da tia kdtk edtin a a daan tidpaa patd aa ktid ktti ti t ai aatda k a iiadidi di dadittti atikddiada dadad ant apada pa tidadaaki tikttiaaakatatitaa aapaadadida  datda atatiti ka
+noise_train/Typing_6,noise_train,Typing,noise_train/Typing_6.wav,38,1.711,False,ddakaaaaaaaaaaakaaaaaaakaaaaa kkakak kaa
+noise_train/Typing_7,noise_train,Typing,noise_train/Typing_7.wav,86,1.811,False,aikiaaaaaaaaaakaaakaaakadaaaaaaaaaaadaa adkakakakaaaaaakaaadakadkaaadakaaa aakaada iaaaak
+noise_train/Typing_8,noise_train,Typing,noise_train/Typing_8.wav,65,0.364,False,aaaaaa  aaa aaaaaaa aaaaaaakaaa aaa aaaaattaaaatadaaaaaaakaaaaaa aaa  aaaa
+noise_train/Typing_9,noise_train,Typing,noise_train/Typing_9.wav,53,1.267,False,daaaadaadatadaaaaiaataaadd tiaaaataddddaaakaa aaaaaaaaa
+noise_train/VacuumCleaner_1,noise_train,VacuumCleaner,noise_train/VacuumCleaner_1.wav,17,0.436,False,iiaa aaaaaaaaaaaaa
+noise_train/VacuumCleaner_2,noise_train,VacuumCleaner,noise_train/VacuumCleaner_2.wav,4,0.085,False,iiii
+noise_train/VacuumCleaner_3,noise_train,VacuumCleaner,noise_train/VacuumCleaner_3.wav,6,0.157,False,iiiiii
+noise_train/VacuumCleaner_4,noise_train,VacuumCleaner,noise_train/VacuumCleaner_4.wav,24,1.15,False,aaun adaaaadadaaaaaaaaaaa
+noise_train/VacuumCleaner_5,noise_train,VacuumCleaner,noise_train/VacuumCleaner_5.wav,0,0.0,False,
+noise_train/VacuumCleaner_6,noise_train,VacuumCleaner,noise_train/VacuumCleaner_6.wav,0,0.0,False,
+noise_train/VacuumCleaner_7,noise_train,VacuumCleaner,noise_train/VacuumCleaner_7.wav,2,0.042,False,ii
+noise_train/VacuumCleaner_8,noise_train,VacuumCleaner,noise_train/VacuumCleaner_8.wav,21,0.158,False,iaaal maakl a maal a aaa    ai
+noise_train/VacuumCleaner_9,noise_train,VacuumCleaner,noise_train/VacuumCleaner_9.wav,20,0.343,False,i iiii iiiidiiiiidiiii
+noise_train/WasherDryer_1,noise_train,WasherDryer,noise_train/WasherDryer_1.wav,48,1.669,False,ddididdddiddidiidid diiddiiiiiddiddiidiidiiddidda
+noise_train/WasherDryer_2,noise_train,WasherDryer,noise_train/WasherDryer_2.wav,195,0.728,False,i diddidiuukkukuuktuuutuun kaukkaaaka kaaia ida dananadad in dndaaddiidndnidanan d an aan daidnaandan id n d diandndinddndnin an kan aakakaik  iii   iiiii  iddiiidiidiiiiiddidiiidiidmmammididiididiiddidi iiiiidiii  i aiidiaa
+noise_train/WasherDryer_3,noise_train,WasherDryer,noise_train/WasherDryer_3.wav,1247,8.733,True,tianda itan idnnd dd ia dd dda dndn inda i a in idi iin danin in din  n dan ini dd n d dnid  indin dn in d n da idn iin i diidni idai in da din diidi ndndn  idin i ndad a didai dn in n i di d dn d did iiini in didin i indidi di din d d n in dn d iin d di di ddn indindn ddin di i i i d din di in diin dn di dinidnin di i d i i din d  i in din in n dd dn dinin i din d di dn din d din in d i din in i  i dn in  din in di i ddn iddi tidididdii d dd dn i dn din dn i di dini iin in idin d did i din dindnd dndidid dni i di dindnind idin din dn idn in dndi in iiidin dn iin d d dn d i dn din din di di d indin i idn dn dn din i nn din di i di i di in d dndi dindi d i d didndn in in id didn aditindnin  dn did in didin di i  ini n d dn in ind indin idnd din didin dni dii di din dniniiin dindnin idn din n d dn din din i id i din ind dindid din i din dn din indn nin d in di i di dn d in ii   n di i innd i i dn in d dn ini in dn i i d dn dn i d di iididn n d di in idi n dd dd di d d  i d ddndi inn d d in dn idin ndnd in in di d dini d iin dnin in in di i i dn indiddin ndin i din iini in in in dinindindin in in i dn d diiin dn i in i idnidin ddin dn din iin dn din dn dnin din dn dn din in di di din dndindnn i indi did din dinn ddi i i di i in din di d i di d dininin dn dn dnin in d d iin di  di i d d i  din d i n dn dn dn dn  in di i d in dnin  i  in dn i dn i d ddini dindin di in in dndin indni i d din din din i dn dd ni dind di din ddn in ii di di din iin indin idddin ddin ndindin n n dn din in di dn din ndn indi i din in dnin di dni dn din in dinn in indin in din in dnin i d in din ddi din dndn din dn dn d dn didini di di i i i dn in d idi i di din din n didn di i di in in in dn i d i dii di n ini in in d idi  ddn ni dn didn idin dnin inindi ddan dn inn
+noise_train/WasherDryer_4,noise_train,WasherDryer,noise_train/WasherDryer_4.wav,438,0.953,False,meaia  iii  iaaaaaiaaaiiaaiaida iiiiiiii ii iaaaaaaaaaaiaaaaadiidaaaaa iiididiiidiiiiiiiiii aaaaaaiaaaaaaiaaiaiaiaaiiiaaiiaiaaaaa i iiiiiddi aiiiiidiiiiidiiiiii aaaidiaaaddaaiadiadaaiaaaaaadnaiadidaiiaiaidaiaadinani iiiiiiiiiii iiiaiiiiaa iiiiiiiiii iiiaiiiiiidii ididddiiididiiiiididiiiidiididddiidi aiidaiaiddidaaddaiididdidaaidadiaadiiaddaadidiiia didididiiidiidiiiiiddiiddddidiiiiiidiii iddiiidddidiididdiiiiiddiddiididdidi idiiaiadididdiaadiidadaaiaaaddaa
+noise_train/WasherDryer_5,noise_train,WasherDryer,noise_train/WasherDryer_5.wav,0,0.0,False,
+noise_train/WasherDryer_6,noise_train,WasherDryer,noise_train/WasherDryer_6.wav,309,3.283,False,nid diadnda aaaadddiddn da diaiidaaaiadaandadididdand aaaian d ididdaa dadandndan idadiindananadiidianadandanda iidadaniidndddan id anidaanaiannddidin anaiaaaakaman aaa aiadadan didi idadiaaadaaratkaaaddaapaia ddaa aad ddidadida aadaa iddidannindidaddadiaidddaama aidadnaaidiaidaidiaaaa ad d iidididdddiiddadaddididdiddaiaanddiiadiadaa
+noise_train/WasherDryer_7,noise_train,WasherDryer,noise_train/WasherDryer_7.wav,15,0.224,False,inamianamiganmn
+noise_train/Washing_1,noise_train,Washing,noise_train/Washing_1.wav,55,0.183,False,iiiiiii    iiiiiiiiiiiii   iiiiiiiiiiiiiiiiiiii i   aiiiiaiaaiiaii
+noise_test/AirConditioner_1,noise_test,AirConditioner,noise_test/AirConditioner_1.wav,15,0.64,False,iiiiiiiiiiiiiii
+noise_test/AirConditioner_10,noise_test,AirConditioner,noise_test/AirConditioner_10.wav,0,0.0,False,
+noise_test/AirConditioner_2,noise_test,AirConditioner,noise_test/AirConditioner_2.wav,0,0.0,False,
+noise_test/AirConditioner_3,noise_test,AirConditioner,noise_test/AirConditioner_3.wav,142,4.329,True,iidditddiiiidiiidiiidididididiidiiiddidiiidiiddnidiitdiditdiidiiidddididdidiiddididknta apaiidaiidididiitdakadidiiidddidiiddddiddididdiidididii
+noise_test/AirConditioner_4,noise_test,AirConditioner,noise_test/AirConditioner_4.wav,0,0.0,False,
+noise_test/AirConditioner_5,noise_test,AirConditioner,noise_test/AirConditioner_5.wav,36,1.197,False,iiiiiiiiiiiiiiiiiiiaaaii iiiiiiiiiiii
+noise_test/AirConditioner_6,noise_test,AirConditioner,noise_test/AirConditioner_6.wav,31,1.295,False,iiiidiiidiiiiidiiiiiiidi iididid
+noise_test/AirConditioner_7,noise_test,AirConditioner,noise_test/AirConditioner_7.wav,14,0.603,False,iiiiiiidiiiid a
+noise_test/AirConditioner_8,noise_test,AirConditioner,noise_test/AirConditioner_8.wav,32,0.593,False,iaaaaaaaaiiiiiiiiii iii aaidadidaa
+noise_test/AirConditioner_9,noise_test,AirConditioner,noise_test/AirConditioner_9.wav,41,0.975,False,sdaenli diiasidu itauetduiiu stis ini saa sukip
+noise_test/CopyMachine_1,noise_test,CopyMachine,noise_test/CopyMachine_1.wav,137,2.753,False,atitidid ddin d inii indidnan in iinddn ini d diniddn dddddididididddiiddidiiddiiiiddiiiddddiiddidddiidididididiiiddiiidiiiddidiiiidi diiiiiiiddiaid
+noise_test/CopyMachine_2,noise_test,CopyMachine,noise_test/CopyMachine_2.wav,35,0.61,False,d daa d aa daa d dad d daa a da da da a dya da da aa
+noise_test/Munching_1,noise_test,Munching,noise_test/Munching_1.wav,75,3.125,False,aaadakud id da inpenet a kanin n uuntuk kan an aaaaka ia da inenet ka an in dar da uuntuk an utu
+noise_test/Munching_2,noise_test,Munching,noise_test/Munching_2.wav,58,1.824,False,maal marema masaya hom nghobin au n aukno n duk lia ilesai iniditak tap
+noise_test/Munching_3,noise_test,Munching,noise_test/Munching_3.wav,116,1.151,False,daadadaadaadaadadadaaadddadaaada d diidalah en ah kemagaanidaaaiijidadadiadia ia aaaaaa enulekan kainika dena mi dini ini a aaan ne a
+noise_test/Munching_4,noise_test,Munching,noise_test/Munching_4.wav,5,0.201,False,busah
+noise_test/Munching_5,noise_test,Munching,noise_test/Munching_5.wav,151,2.314,False,k i   i na nia n na nna    i  ye  a aada ayaakal alakana maei ai i di  didi di i m kituk sarkalaulan tulan tulan trlan tulan tula tekan itua itu  anaka kaa tekan di pencokai puda yaluaudang minyukaan
+noise_test/Munching_6,noise_test,Munching,noise_test/Munching_6.wav,100,4.691,True,ia ludeaugela trna  dia tiduolia ludatugla derura da dukliia lueaugla derna  dia tiduoada ludatuela deguna yang tidupa
+noise_test/Munching_7,noise_test,Munching,noise_test/Munching_7.wav,45,1.261,False,adakaataala taatadaaaaiaa ayataka leda duna ai apa i
+noise_test/Munching_8,noise_test,Munching,noise_test/Munching_8.wav,141,3.756,False,ya tonktantanaan an daanidan anyankaa imannma di ka an dikakan dikomin kadika kan mala kaa taini sanikankuuitanunya kaan tunton tilift duutuknya ank ikenteji nitemn
+noise_test/ShuttingDoor_1,noise_test,ShuttingDoor,noise_test/ShuttingDoor_1.wav,45,1.941,False,kam tutu k tutkam tut kam tutkam tutka tutkam t kamu tut
+noise_test/ShuttingDoor_2,noise_test,ShuttingDoor,noise_test/ShuttingDoor_2.wav,0,0.0,False,
+noise_test/ShuttingDoor_3,noise_test,ShuttingDoor,noise_test/ShuttingDoor_3.wav,82,3.371,False,caa akeca pikeuaa pkeiaa akeiaa akua kia akma pka aka pkeiuca pkeilucaa pkica jangan ltedujaa eti
+noise_test/ShuttingDoor_4,noise_test,ShuttingDoor,noise_test/ShuttingDoor_4.wav,58,1.778,False,atk laiatak ulaiaak mai et lai ea muli atak elsi akak mlasi akakmulasi
+noise_test/ShuttingDoor_5,noise_test,ShuttingDoor,noise_test/ShuttingDoor_5.wav,113,3.308,False,tta a ta ta a ta ta ta tata ta tata ta ta ta ta a ta ta a ta ta ta tata ta tata ta ta ta ta a ta ta ta ta tata ta tata ta tata ta a ta ta a ta ta ta tata ta tatat
+noise_test/ShuttingDoor_6,noise_test,ShuttingDoor,noise_test/ShuttingDoor_6.wav,50,2.289,False,makan mka man an akan ma man aan kan man maan aan kan kan makan e
+noise_test/ShuttingDoor_7,noise_test,ShuttingDoor,noise_test/ShuttingDoor_7.wav,39,1.367,False,makan makan makan makan mkan makan makan makan
+noise_test/ShuttingDoor_8,noise_test,ShuttingDoor,noise_test/ShuttingDoor_8.wav,45,2.045,False,ataaa kadi aa kak aa kadi aa kak aa kadi aa kak co terpaki
+noise_test/Typing_1,noise_test,Typing,noise_test/Typing_1.wav,604,2.845,False,anitutatataatta uutaiutpukupepaaaadaatkdiin tiukkakaauaaaa teer tittiuuk tdak atu tiidintatnketidatitu uduk dikat diateaa kant tida k ki tki kake ketatai ikakataaktitu kaaataaiiaad aatatdadaiakak dudu kaitaaadkakaakataaaa aattatkak a knatakataaka ka ta tdta ttitu tantitatat a aaaaeenan n aakantu jada kdatdi tantaaaidiikiiknanpat kutiitu atkknkan at ataya kiakatinuttneeutttna u upeaaakt atu emtndan tkutu dra tinkin ta pi aneta didkat kenpai tta kan  kaaikatuteaadaan aka akkataa auduk ketikkkaa adakan ka tkukuattitututuakan iuttutikiaaktitkatiak tik akakiiiei diddkatpaakanaadaaatanaatan akaat kakakakakaia katak dadi k takaata nekttukaakaadantatetaapaa akkkakaakata etatatatant
+noise_test/Typing_2,noise_test,Typing,noise_test/Typing_2.wav,4,0.019,False,aaaa
+noise_test/VacuumCleaner_1,noise_test,VacuumCleaner,noise_test/VacuumCleaner_1.wav,3,0.087,False,iaa

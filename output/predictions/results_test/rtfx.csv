@@ -1,0 +1,4 @@
+model,audio_sec,inference_sec,rtfx,checkpoint,revision,dtype,device,gpu,batch_size,peak_gpu_memory_gb,torch,transformers
+custom_cnn_bilstm_ctc,340783.3859375,200.09643511600325,1703.0957385119598,/kaggle/working/models/custom_cnn_bilstm_ctc/best.pt,,,cuda,Tesla T4,16,0.23,2.11.0+cu130,5.23.0
+wav2vec2,340783.3859375,3938.786775223017,86.51988680402853,indonesian-nlp/wav2vec2-large-xlsr-indonesian,68fbcbd947e32184a704b401b71973d6c27de0c1,torch.float32,cuda,Tesla T4,8,3.289,2.11.0+cu130,5.23.0
+whisper,340783.3859375,19144.059106917157,17.80099946590573,openai/whisper-large-v3,06f233fe06e710322aca913c1bc4249a0d71fce1,torch.float16,cuda,Tesla T4,16,7.731,2.11.0+cu130,5.23.0

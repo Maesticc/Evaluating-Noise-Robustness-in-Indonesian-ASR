@@ -38,9 +38,9 @@ NOISE_PROVENANCE = (
 )
 
 
-# --------------------------------------------------------------------------- audio I/O
 def load_audio(path: str | Path, target_sr: int | None = None, mono: bool = True) -> tuple[np.ndarray, int]:
-    """Load audio as float32 in [-1, 1]. Resamples only when target_sr differs."""
+    """Load audio as float32 in [-1, 1], resampled only when needed. The loudness is not normalized,
+    because that would change the speech/noise relationship before mixing."""
     audio, sr = sf.read(str(path), dtype="float32", always_2d=True)  # (frames, channels)
     audio = audio.T
     if mono and audio.shape[0] > 1:
@@ -60,7 +60,6 @@ def resample(audio: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
     return AF.resample(tensor, orig_sr, target_sr).numpy()
 
 
-# --------------------------------------------------------------------------- download
 def download_speech(cfg: dict, categories: list[str] | None = None, audio: bool = True) -> None:
     """Download metadata (and optionally category tar shards) from Hugging Face, then extract."""
     from huggingface_hub import HfApi, snapshot_download
@@ -111,7 +110,6 @@ def download_noise(cfg: dict) -> None:
     log.info("MS-SNSD noise folders ready at %s (commit %s)", root, commit)
 
 
-# --------------------------------------------------------------------------- manifests
 def _to_bool(series: pd.Series) -> pd.Series:
     if series.dtype == bool:
         return series
@@ -191,6 +189,13 @@ def build_speech_manifest(cfg: dict) -> pd.DataFrame:
     log.info("Wrote %s", path)
     log.info("Rows per split:\n%s", out.groupby(["official_split", "is_synthetic"]).size().to_string())
     return out
+
+
+def eligible_speech(cfg: dict, split: str) -> pd.DataFrame:
+    """Utterances of one official split that passed the audit, sorted by utt_id."""
+    df = pd.read_csv(manifest_path(cfg, "speech_manifest.csv"), keep_default_na=False)
+    df = df[(df["official_split"] == split) & _to_bool(df["eligible_primary"])]
+    return df.sort_values("utt_id").reset_index(drop=True)
 
 
 def noise_category(filename: str, aliases: dict[str, str]) -> str:

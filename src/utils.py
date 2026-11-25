@@ -8,6 +8,7 @@ import logging
 import os
 import platform
 import random
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -89,18 +90,34 @@ def resolve_device(preference: str = "auto") -> str:
     return preference
 
 
+def git_info() -> dict:
+    """The Git commit of the code that produced a result, and whether the code (`src/`, `config/`) was
+    changed after that commit. None when the project is not a Git checkout."""
+    try:
+        def git(*args):
+            return subprocess.run(["git", "-C", str(PROJECT_ROOT), *args], capture_output=True, text=True,
+                                  check=True).stdout.strip()
+        return {"git_commit": git("rev-parse", "HEAD"),
+                "git_code_changed": git("status", "--porcelain", "--", "src", "config") != ""}
+    except (OSError, subprocess.CalledProcessError):
+        return {"git_commit": None, "git_code_changed": None}
+
+
 def environment_info() -> dict:
     """Software and hardware details recorded with every run."""
     info: dict[str, Any] = {
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "processor": platform.processor(),
+        **git_info(),
     }
+    from importlib.metadata import PackageNotFoundError, version
+
+    # Installed distribution metadata: also covers packages without __version__ (e.g. jiwer).
     for pkg in ("numpy", "pandas", "torch", "torchaudio", "transformers", "jiwer", "librosa", "soundfile"):
         try:
-            module = __import__(pkg)
-            info[pkg] = getattr(module, "__version__", "unknown")
-        except ImportError:
+            info[pkg] = version(pkg)
+        except PackageNotFoundError:
             info[pkg] = None
     try:
         import torch

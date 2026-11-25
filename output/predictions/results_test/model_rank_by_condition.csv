@@ -1,0 +1,6 @@
+condition,custom_cnn_bilstm_ctc,wav2vec2,whisper
+clean,2,3,1
+snr_0dB,3,2,1
+snr_10dB,2,3,1
+snr_20dB,2,3,1
+snr_5dB,3,2,1

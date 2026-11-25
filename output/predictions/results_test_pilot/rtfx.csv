@@ -1,3 +1,4 @@
-model,audio_sec,inference_sec,rtfx
-wav2vec2,714.50875,32.07481289999487,22.276318562722288
-whisper,714.50875,836.2920092000011,0.8543771100760615
+model,audio_sec,inference_sec,rtfx,checkpoint,revision,dtype,device,gpu,batch_size,peak_gpu_memory_gb,torch,transformers
+custom_cnn_bilstm_ctc,714.50875,1.1803585000016028,605.3319817657346,C:\Documents\SEMS5\AOL_DL\output\models\custom_cnn_bilstm_ctc\best.pt,,,cuda,NVIDIA GeForce RTX 3050 Laptop GPU,16,0.182,2.11.0+cu126,5.23.0
+wav2vec2,714.50875,31.56244379999407,22.637941299087057,indonesian-nlp/wav2vec2-large-xlsr-indonesian,,torch.float32,cuda,NVIDIA GeForce RTX 3050 Laptop GPU,8,2.687,2.11.0+cu126,5.23.0
+whisper,714.50875,664.3882979000628,1.0754384932099998,openai/whisper-large-v3,,torch.float16,cuda,NVIDIA GeForce RTX 3050 Laptop GPU,1,3.39,2.11.0+cu126,5.23.0
