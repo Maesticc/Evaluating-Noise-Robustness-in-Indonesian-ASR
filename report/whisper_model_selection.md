@@ -65,4 +65,21 @@ large-v3; only the decoder is pruned (32 to 4 layers). This is a **hypothesis** 
 
 ## Outcome
 
-Pending: no full-run GPU has been chosen yet; Large-v3 remains the configured checkpoint.
+**Large-v3 kept (rule 1).** With the lecturer's approval (2026-11-23), the full run was done on Kaggle on one
+NVIDIA Tesla T4 (16 GB), with all three models on the same GPU. The turbo fallback was not needed, so the
+validation comparison above was not run.
+
+| | Laptop pilot (RTX 3050, 4 GB) | Kaggle full test (T4, 16 GB) |
+|---|---|---|
+| Checkpoint | `openai/whisper-large-v3` @ `06f233f`, fp16 | same |
+| Batch size | 1 | 16 |
+| RTFx | 1.08 | 17.8 |
+| Peak GPU memory | 3.39 GB | 7.73 GB |
+| Time | 150 rows | 78,365 rows (94.7 h of audio) in 5.3 h |
+
+- The batch size only changes speed: the pilot repeated on the T4 with batch 16 gave transcripts identical to the
+  laptop run with batch 1 (150/150, `output/kaggle/PILOT_CHECK.json`).
+- `config.yaml` keeps `batch_size: 1` for the laptop; the Kaggle setting is saved in
+  `output/kaggle/config_kaggle_test.yaml`.
+- Full-test WER: 4.79 % clean, 21.94 % at 0 dB, the best of the three models in every condition
+  (see the README and `report/results_analysis.md`).
